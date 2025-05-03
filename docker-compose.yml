@@ -1,0 +1,429 @@
+services:
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "8001:8000"
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - redis
+      - rabbitmq
+      - elasticsearch
+      - celery_beat
+      - flower
+    restart: on-failure
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+
+  db:
+    image: postgres:15
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_DB=${DB_NAME}
+    ports:
+      - "5432:5432"
+  
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+  
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"   # AMQP protocol port
+      - "15672:15672" # Management UI port
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    environment:
+      - RABBITMQ_DEFAULT_USER=guest
+      - RABBITMQ_DEFAULT_PASS=guest
+    restart: on-failure
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3  
+  
+  # SOAR Setup Worker - Handles setup, migrations, and system tasks
+  soar_setup_worker:
+    build: .
+    command: >
+      celery -A sentineliq worker 
+      --loglevel=info 
+      -E 
+      --concurrency=2
+      --max-tasks-per-child=100
+      --task-events
+      --time-limit=1800 
+      --soft-time-limit=1500
+      -Q sentineliq_soar_setup
+      --hostname=soar_setup@%h
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - C_FORCE_ROOT=true
+      - PYTHONIOENCODING=utf-8
+      - PYTHONUNBUFFERED=1
+      - CELERY_DISABLE_COLOR=0
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: celery -A sentineliq inspect ping -d soar_setup@%h
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+  
+  # SOAR Vision Feed Worker - Handles threat intelligence feeds
+  soar_vision_feed_worker:
+    build: .
+    command: >
+      celery -A sentineliq worker 
+      --loglevel=info 
+      -E 
+      --concurrency=2
+      --max-tasks-per-child=100
+      --task-events
+      --time-limit=1800 
+      --soft-time-limit=1500
+      -Q sentineliq_soar_vision_feed
+      --hostname=soar_vision_feed@%h
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - C_FORCE_ROOT=true
+      - PYTHONIOENCODING=utf-8
+      - PYTHONUNBUFFERED=1
+      - CELERY_DISABLE_COLOR=0
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: celery -A sentineliq inspect ping -d soar_vision_feed@%h
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # SOAR Vision Enrichment Worker - Handles observable enrichment  
+  soar_vision_enrichment_worker:
+    build: .
+    command: >
+      celery -A sentineliq worker 
+      --loglevel=info 
+      -E 
+      --concurrency=2
+      --max-tasks-per-child=100
+      --task-events
+      --time-limit=1800 
+      --soft-time-limit=1500
+      -Q sentineliq_soar_vision_enrichment
+      --hostname=soar_vision_enrichment@%h
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - C_FORCE_ROOT=true
+      - PYTHONIOENCODING=utf-8
+      - PYTHONUNBUFFERED=1
+      - CELERY_DISABLE_COLOR=0
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: celery -A sentineliq inspect ping -d soar_vision_enrichment@%h
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # SOAR Vision Analyzer Worker - Handles AI-powered analysis
+  soar_vision_analyzer_worker:
+    build: .
+    command: >
+      celery -A sentineliq worker 
+      --loglevel=info 
+      -E 
+      --concurrency=2
+      --max-tasks-per-child=100
+      --task-events
+      --time-limit=1800 
+      --soft-time-limit=1500
+      -Q sentineliq_soar_vision_analyzer
+      --hostname=soar_vision_analyzer@%h
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - C_FORCE_ROOT=true
+      - PYTHONIOENCODING=utf-8
+      - PYTHONUNBUFFERED=1
+      - CELERY_DISABLE_COLOR=0
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: celery -A sentineliq inspect ping -d soar_vision_analyzer@%h
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # SOAR Vision Responder Worker - Handles automated response actions
+  soar_vision_responder_worker:
+    build: .
+    command: >
+      celery -A sentineliq worker 
+      --loglevel=info 
+      -E 
+      --concurrency=2
+      --max-tasks-per-child=100
+      --task-events
+      --time-limit=1800 
+      --soft-time-limit=1500
+      -Q sentineliq_soar_vision_responder
+      --hostname=soar_vision_responder@%h
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - C_FORCE_ROOT=true
+      - PYTHONIOENCODING=utf-8
+      - PYTHONUNBUFFERED=1
+      - CELERY_DISABLE_COLOR=0
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: celery -A sentineliq inspect ping -d soar_vision_responder@%h
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+  
+  # SOAR Notification Worker - Handles system notifications
+  soar_notification_worker:
+    build: .
+    command: >
+      celery -A sentineliq worker 
+      --loglevel=info 
+      -E 
+      --concurrency=2
+      --max-tasks-per-child=100
+      --task-events
+      --time-limit=1800 
+      --soft-time-limit=1500
+      -Q sentineliq_soar_notification
+      --hostname=soar_notification@%h
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - C_FORCE_ROOT=true
+      - PYTHONIOENCODING=utf-8
+      - PYTHONUNBUFFERED=1
+      - CELERY_DISABLE_COLOR=0
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: celery -A sentineliq inspect ping -d soar_notification@%h
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+  
+  celery_beat:
+    build: .
+    command: >
+      celery -A sentineliq beat 
+      --loglevel=info 
+      --pidfile=/tmp/celerybeat.pid 
+      --scheduler=django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - PYTHONIOENCODING=utf-8
+      - PYTHONUNBUFFERED=1
+      - CELERY_DISABLE_COLOR=0
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
+    depends_on:
+      soar_setup_worker:
+        condition: service_healthy
+      soar_vision_feed_worker:
+        condition: service_healthy
+      soar_vision_enrichment_worker:
+        condition: service_healthy
+      soar_vision_analyzer_worker:
+        condition: service_healthy
+      soar_vision_responder_worker:
+        condition: service_healthy
+      soar_notification_worker:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ps aux | grep "celery -A sentineliq beat" | grep -v grep
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+  
+  flower:
+    build: .
+    command: >
+      bash -c "sleep 10 && 
+      celery -A sentineliq flower 
+      --port=5555 
+      --broker=amqp://guest:guest@rabbitmq:5672// 
+      --broker_api=http://guest:guest@rabbitmq:15672/api/ 
+      --persistent=True 
+      --db=/app/flower.db
+      --basic_auth=admin:admin
+      --url_prefix=flower"
+    volumes:
+      - .:/app
+    ports:
+      - "5555:5555"
+    env_file:
+      - .env
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=redis://redis:6379/0
+      - FLOWER_UNAUTHENTICATED_API=0
+      - PYTHONIOENCODING=utf-8
+      - PYTHONUNBUFFERED=1
+      - LC_ALL=C.UTF-8
+      - LANG=C.UTF-8
+    depends_on:
+      soar_setup_worker:
+        condition: service_healthy
+      soar_vision_feed_worker:
+        condition: service_healthy
+      soar_vision_enrichment_worker:
+        condition: service_healthy
+      soar_vision_analyzer_worker:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: curl --fail http://localhost:5555/flower/ || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.6
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      - bootstrap.memory_lock=true
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9200"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    restart: on-failure
+
+volumes:
+  postgres_data:
+  redis_data:
+  rabbitmq_data:
+  elasticsearch_data: 

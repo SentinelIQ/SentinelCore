@@ -1,0 +1,257 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# 🤖 AI-Executable Project Standards for Django REST Framework (DRF) – Enterprise-grade
+
+> ⚠️ **IMPORTANT:** Every implementation MUST comply with **ALL the following rules**. No partial compliance is accepted. All code must reflect these standards from the first commit and throughout the lifecycle of the application.
+
+
+## ✅ Project Implementation Status Tracker
+
+> This section MUST be manually updated by developers or automation agents during the project lifecycle.
+
+### 🔧 Pending Tasks
+- [ ] All API endpoints documented using `@extend_schema`
+- [ ] All models registered in Django Admin
+- [ ] All tests centralized under `/tests/`
+- [ ] Logging configured with separate log files
+- [ ] All apps created using `startapp` command
+- [ ] No placeholders or TODOs in committed code
+
+### ✅ Completed Tasks
+- [x] Poetry used for dependency management
+- [x] Docker-based environment configured
+- [x] Modular view structure in place
+- [x] Core API response handler implemented in `api.core.responses`
+- [x] RBAC enforced in `api.core.rbac`
+
+
+
+You are an expert automation agent assigned to maintain and enforce Django REST Framework (DRF) enterprise standards. You MUST follow the strict modularization, dependency, testing, logging, and naming conventions as described below.
+
+---
+
+## 🎯 Objective
+
+Ensure every Django project is:
+
+- Fully modular, clean, and scalable
+- Using **Poetry** exclusively for dependency management
+- Fully containerized; all commands MUST run inside Docker
+- Following **RBAC** as the default security model
+- Implemented with standard API responses from a centralized `api.core` module
+- Implemented in **English** only (code and documentation)
+- Tested through a **centralized test runner**, from the container
+
+---
+
+## 📁 Mandatory Directory Layout
+
+Project root must follow:
+
+```
+project_root/
+├── api/
+│   └── v1/
+│       └── <modular_apps>/
+├── tests/
+│   ├── alerts/
+│   ├── incidents/
+│   └── ...
+├── logs/
+│   ├── api.log
+│   ├── error.log
+│   └── django.log
+├── docs/
+├── pyproject.toml  ← Poetry only
+└── ...
+```
+
+---
+
+## 📦 Modular App Structure (Per App)
+
+Each DRF app MUST contain:
+
+```
+<app>/
+├── views/
+│   ├── __init__.py                ← combines view mixins
+│   ├── <resource>_create.py
+│   ├── <resource>_detail.py
+│   └── <resource>_custom_actions.py
+├── serializers/
+├── permissions/
+├── filters/
+```
+
+> Use **View Mixins** inside `views/__init__.py` to aggregate smaller view classes.
+
+---
+
+## 📜 Testing Rules
+
+- ❌ DO NOT place test files inside any Django app.
+- ✅ ALL tests MUST go into `/tests/`, structured by app.
+
+Example:
+
+```
+tests/
+├── alerts/
+│   ├── test_alert_create.py
+│   └── test_alert_escalate.py
+├── incidents/
+│   └── ...
+```
+
+Test execution:
+
+```bash
+docker compose exec web python manage.py test tests
+```
+
+---
+
+## 📂 Logging Rules
+
+Create a `/logs/` folder and configure separate log outputs:
+
+```
+logs/
+├── api.log       ← API-level logging
+├── error.log     ← Exception logging
+├── django.log    ← Native Django logs
+```
+
+All logging is configured via Django `LOGGING` settings.
+
+---
+
+## 📦 Dependency Rules (Poetry Only)
+
+- ❌ Do not use `requirements.txt`
+- ❌ Do not use `venv` or `.venv`
+- ✅ Use ONLY Poetry via:
+
+```bash
+docker compose exec web poetry add <package>
+```
+
+```bash
+poetry install
+```
+
+---
+
+## 📑 API Rules
+
+- All endpoints MUST follow kebab-case: e.g., `/incident/update-case/123/`
+- All API responses MUST use centralized formatting via `api.core.response`
+- All routes and views MUST return standardized status and error codes
+- NO CamelCase naming in URLs or route paths
+- Only English is allowed in endpoints, code, and documentation
+- RBAC is MANDATORY for all permission layers
+
+- ✅ Every API endpoint, view, serializer, model, and permission MUST be fully documented using `drf-spectacular` or OpenAPI-compatible annotations.
+  - This includes: request/response schemas, status codes, examples, and tags.
+  - Documentation must be complete, descriptive, and structured to meet **enterprise-grade standards** and ensure **developer interoperability**.
+  - Incomplete or undocumented endpoints are NOT allowed in production or main branches.
+
+- ✅ Use `@extend_schema(tags=[...])` from `drf-spectacular` to ensure all API endpoints are consistently grouped and documented.
+  - Each view or route must have an appropriate `tags` declaration to support automated and structured API documentation.
+
+- ❌ Placeholders or stub implementations (e.g., `pass`, `TODO`, `NotImplementedError`) are strictly prohibited in committed code.
+- ✅ All features, views, endpoints, and components MUST be functionally implemented and tested before merging.
+
+- All source code **MUST be written in English**, including:
+  - Variable names
+  - Function and class names
+  - All in-line comments and docstrings
+
+---
+
+## ✅ Enforced Checklist
+
+| Rule                                                        | Must Pass |
+|-------------------------------------------------------------|-----------|
+| Views are split by responsibility in separate files         | ✅         |
+| All tests are inside `/tests/` root folder only             | ✅         |
+| All logs go to `/logs/` with dedicated files                | ✅         |
+| Poetry is used exclusively, no pip, no requirements.txt     | ✅         |
+| Kebab-case used in all routes and paths                     | ✅         |
+| Code and documentation in English                           | ✅         |
+| All test commands run inside Docker                         | ✅         |
+| API response format comes from `api.core`                   | ✅         |
+| RBAC is implemented on all routes                           | ✅         |
+| No `venv` or `.venv` folders in the project                 | ✅         |
+
+---
+
+## ⚠️ If Violated
+
+Any violation of these policies should trigger:
+- CI pipeline failure (if integrated)
+- Auto-linter alert with file and line-level feedback
+- Optional: automatic PR comment for correction
+
+---
+
+## 🧠 Execution Context
+
+You are NOT allowed to execute any `manage.py` command outside the container. Always use:
+
+```bash
+docker compose exec web python manage.py <command>
+```
+
+---
+
+## 📌 Result
+
+Following this guide, the Django DRF project becomes:
+
+- ✅ Enterprise-compliant
+- ✅ Modular and maintainable
+- ✅ Ready for automated deployments and code audits
+- ✅ Easy to onboard new developers or scale teams
+
+---
+
+
+## 🛠️ Django Admin Registration
+
+- ✅ Every Django app must register its models in the Django Admin interface (`admin.py`) with meaningful display configurations.
+  - Use `list_display`, `search_fields`, and `readonly_fields` to enhance manageability.
+  - This ensures that all core resources are visible and manageable through the admin dashboard.
+- ❌ It is strictly prohibited to leave models unregistered or rely on legacy or outdated admin configurations.
+- ✅ When upgrading or refactoring an app, the `admin.py` file MUST be reviewed and updated to match the current model structure and use modern admin features.
+- ❌ Maintaining compatibility with outdated admin configurations is NOT allowed. All configurations must reflect the latest structure and standards of the app.
+
+
+
+
+
+## 🧱 Django App Creation Standard
+
+- ✅ Every Django app MUST be created using the official Django management command:
+  ```bash
+  docker compose exec web python manage.py startapp <app_name>
+  ```
+- ❌ Manual creation of app folders and files is strictly prohibited.
+- ✅ The resulting structure MUST follow the default Django layout and be extended according to project modular standards.
+- ✅ All apps MUST contain at least: `apps.py`, `admin.py`, `models.py`, `migrations/`, and `__init__.py` from the start.
+- ✅ Models MUST be registered in `admin.py` and exposed via Django Admin.
+- ✅ Apps like `alerts`, `incidents`, `companies`, and `tasks` in this project follow this pattern and serve as valid references.
+- ❌ Do not bypass Django’s app registration or structure. All applications MUST be fully integrated into `INSTALLED_APPS` and follow DRY and SRP principles.
+
+
+- ✅ Every Django app MUST be created using the official Django management command:
+  ```bash
+  docker compose exec web python manage.py startapp <app_name>
+  ```
+- ❌ Manual creation of apps, custom folder structures, or bypassing Django’s default conventions is strictly prohibited.
+- ✅ The generated app structure MUST be preserved and extended properly using Django’s modular architecture.
+- ✅ This ensures compatibility with Django Admin, migrations, and app registry. Any deviation breaks enterprise maintainability.

@@ -1,0 +1,77 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}{% trans 'Add Feed Module' %}{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label='sentinelvision' %}">{% trans 'SentinelVision' %}</a>
+    &rsaquo; <a href="{% url 'admin:sentinelvision_feedmodule_changelist' %}">{% trans 'Feed Modules' %}</a>
+    &rsaquo; {% trans 'Add Feed Module' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <h1>{% trans 'Choose Feed Type' %}</h1>
+    
+    <div class="module">
+        <p>{% trans 'Please select a feed type from the list below and provide the required information to create a new feed module.' %}</p>
+        
+        <form action="" method="post">
+            {% csrf_token %}
+            
+            <fieldset class="module aligned">
+                {% for field in form %}
+                    <div class="form-row field-{{ field.name }}">
+                        <div class="field-box">
+                            <label for="{{ field.id_for_label }}" class="required">
+                                {{ field.label }}
+                            </label>
+                            {{ field }}
+                            {% if field.help_text %}
+                                <div class="help">{{ field.help_text }}</div>
+                            {% endif %}
+                            {% if field.errors %}
+                                <ul class="errorlist">
+                                    {% for error in field.errors %}
+                                        <li>{{ error }}</li>
+                                    {% endfor %}
+                                </ul>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endfor %}
+            </fieldset>
+            
+            <div class="submit-row">
+                <input type="submit" value="{% trans 'Next' %}" class="default" name="_save">
+            </div>
+        </form>
+    </div>
+    
+    <div class="module">
+        <h2>{% trans 'Available Feed Types' %}</h2>
+        
+        <p>{% trans 'The following feed types are available for your organization:' %}</p>
+        
+        <table class="module">
+            <thead>
+                <tr>
+                    <th>{% trans 'Feed Type' %}</th>
+                    <th>{% trans 'Description' %}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for feed_id, feed_info in feed_types %}
+                    <tr>
+                        <td><strong>{{ feed_info.name }}</strong> ({{ feed_id }})</td>
+                        <td>{{ feed_info.description }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %} 

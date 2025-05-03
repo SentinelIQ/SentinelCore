@@ -1,0 +1,59 @@
+[
+  {
+    "model": "auth_app.user",
+    "pk": 1,
+    "fields": {
+      "username": "adminsentinel",
+      "email": "admin@sentineliq.com",
+      "password": "pbkdf2_sha256$600000$p8Ef2KsFKR9GMGQzk6f7LB$wY9HHxO37WkGJNKdUt5BrPkGFNuHRq0E5HxmKY4KMjI=",
+      "first_name": "Admin",
+      "last_name": "Sentinel",
+      "role": "superuser",
+      "company": null,
+      "is_superuser": true,
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2025-01-01T00:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth_app.user",
+    "pk": 2,
+    "fields": {
+      "username": "admin_mitre_test",
+      "email": "admin_mitre@sentineliq.com",
+      "password": "pbkdf2_sha256$600000$p8Ef2KsFKR9GMGQzk6f7LB$wY9HHxO37WkGJNKdUt5BrPkGFNuHRq0E5HxmKY4KMjI=",
+      "first_name": "Admin",
+      "last_name": "MITRE",
+      "role": "superuser",
+      "company": null,
+      "is_superuser": true,
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2025-01-01T00:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "auth_app.user",
+    "pk": 3,
+    "fields": {
+      "username": "analyst_mitre_test",
+      "email": "analyst_mitre@sentineliq.com",
+      "password": "pbkdf2_sha256$600000$p8Ef2KsFKR9GMGQzk6f7LB$wY9HHxO37WkGJNKdUt5BrPkGFNuHRq0E5HxmKY4KMjI=",
+      "first_name": "Analyst",
+      "last_name": "MITRE",
+      "role": "analyst_company",
+      "company": 1,
+      "is_superuser": false,
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2025-01-01T00:00:00Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  }
+] 

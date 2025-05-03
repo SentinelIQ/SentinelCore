@@ -1,0 +1,71 @@
+{% extends "admin/base_site.html" %}
+{% load i18n l10n admin_urls static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {{ media }}
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:sentinelvision_feedmodule_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; <a href="{% url 'admin:sentinelvision_feedmodule_change' feed.pk %}">{{ feed.name }}</a>
+    &rsaquo; {% trans 'Run Feed' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="card">
+        <div class="card-body">
+            <h1>{% trans 'Run Feed Module' %}: {{ feed.name }}</h1>
+            
+            <div class="alert {% if is_global %}alert-warning{% else %}alert-info{% endif %}">
+                {% if is_global %}
+                <strong>Note:</strong> This is a global feed module and is not linked to any specific company.
+                {% else %}
+                <strong>Note:</strong> This feed module is linked to company: {{ feed.company.name }}.
+                {% endif %}
+            </div>
+            
+            <p>{% trans 'Are you sure you want to run this feed module now?' %}</p>
+            
+            <div class="module">
+                <h2>Feed Details</h2>
+                <table>
+                    <tr>
+                        <th>Name:</th>
+                        <td>{{ feed.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Type:</th>
+                        <td>{{ feed.feed_type|default:feed.module_type }}</td>
+                    </tr>
+                    <tr>
+                        <th>Company:</th>
+                        <td>{{ feed.company.name|default:"Global (No Company)" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Feed URL:</th>
+                        <td>{{ feed.feed_url }}</td>
+                    </tr>
+                    <tr>
+                        <th>Last Run:</th>
+                        <td>{{ feed.last_run|default:"Never" }}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <form method="post">
+                {% csrf_token %}
+                <div class="submit-row">
+                    <input type="submit" class="default" value="{% trans 'Yes, Run Now' %}">
+                    <a href="{% url 'admin:sentinelvision_feedmodule_change' feed.pk %}" class="button">{% trans 'Cancel' %}</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %} 

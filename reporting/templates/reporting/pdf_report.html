@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Incident Report - {{ incident.title }}</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            font-size: 12px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+        .company-name {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .report-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        .metadata {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f8f8f8;
+            border-radius: 4px;
+        }
+        .metadata table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .metadata td {
+            padding: 5px;
+            vertical-align: top;
+        }
+        .metadata td:first-child {
+            font-weight: bold;
+            width: 150px;
+        }
+        .section {
+            margin-bottom: 20px;
+        }
+        h1 {
+            font-size: 22px;
+            color: #2c3e50;
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        h2 {
+            font-size: 18px;
+            color: #34495e;
+            margin-top: 20px;
+            margin-bottom: 10px;
+        }
+        h3 {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-top: 15px;
+            margin-bottom: 5px;
+        }
+        p {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        ul, ol {
+            margin-bottom: 15px;
+            padding-left: 20px;
+        }
+        li {
+            margin-bottom: 5px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            font-size: 10px;
+            color: #777;
+            text-align: center;
+        }
+        /* Severity Colors */
+        .severity-critical {
+            color: #e74c3c;
+        }
+        .severity-high {
+            color: #e67e22;
+        }
+        .severity-medium {
+            color: #f39c12;
+        }
+        .severity-low {
+            color: #27ae60;
+        }
+        /* Status Colors */
+        .status-open {
+            color: #3498db;
+        }
+        .status-in-progress {
+            color: #f39c12;
+        }
+        .status-resolved {
+            color: #27ae60;
+        }
+        .status-closed {
+            color: #7f8c8d;
+        }
+        /* TLP Colors */
+        .tlp-red {
+            color: #e74c3c;
+        }
+        .tlp-amber {
+            color: #f39c12;
+        }
+        .tlp-green {
+            color: #27ae60;
+        }
+        .tlp-white {
+            color: #7f8c8d;
+        }
+        /* Timeline */
+        .timeline-entry {
+            margin-bottom: 15px;
+            padding-left: 15px;
+            border-left: 2px solid #3498db;
+        }
+        .timeline-title {
+            font-weight: bold;
+        }
+        .timeline-meta {
+            font-size: 11px;
+            color: #7f8c8d;
+            margin-bottom: 5px;
+        }
+        /* Page breaks */
+        .page-break {
+            page-break-after: always;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-name">{{ company_name }}</div>
+        <div class="report-title">Incident Report</div>
+        <div>Generated on {{ generated_date }}</div>
+    </div>
+    
+    <div class="metadata">
+        <table>
+            <tr>
+                <td>Title:</td>
+                <td><strong>{{ incident.title }}</strong></td>
+            </tr>
+            <tr>
+                <td>ID:</td>
+                <td>{{ incident.id }}</td>
+            </tr>
+            <tr>
+                <td>Severity:</td>
+                <td class="severity-{{ incident.severity }}">{{ incident.get_severity_display }}</td>
+            </tr>
+            <tr>
+                <td>Status:</td>
+                <td class="status-{{ incident.status }}">{{ incident.get_status_display }}</td>
+            </tr>
+            <tr>
+                <td>TLP:</td>
+                <td class="tlp-{{ incident.get_tlp_display|lower }}">{{ incident.get_tlp_display }}</td>
+            </tr>
+            <tr>
+                <td>Created:</td>
+                <td>{{ incident.created_at|date:"Y-m-d H:i:s" }}</td>
+            </tr>
+        </table>
+    </div>
+    
+    <div class="content">
+        {{ html_content|safe }}
+    </div>
+    
+    <div class="footer">
+        <p>Confidential: This report contains sensitive information and should be handled according to the indicated TLP level.</p>
+        <p>{{ company_name }} - Sentineliq Platform</p>
+    </div>
+</body>
+</html> 

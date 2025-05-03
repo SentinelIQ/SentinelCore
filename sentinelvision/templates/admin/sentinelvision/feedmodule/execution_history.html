@@ -1,0 +1,180 @@
+{% extends "admin/base_site.html" %}
+{% load i18n l10n admin_urls static %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {{ media }}
+    <style>
+        .status-pending {
+            background-color: #f8f9fa;
+            color: #212529;
+        }
+        .status-running {
+            background-color: #cfe2ff;
+            color: #084298;
+        }
+        .status-success {
+            background-color: #d1e7dd;
+            color: #0f5132;
+        }
+        .status-failed {
+            background-color: #f8d7da;
+            color: #842029;
+        }
+        .execution-log {
+            background-color: #f8f9fa;
+            font-family: monospace;
+            padding: 15px;
+            border-radius: 4px;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .toggle-log-btn {
+            cursor: pointer;
+            margin-bottom: 10px;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers for toggling log sections
+            document.querySelectorAll('.toggle-log-btn').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    var logId = this.getAttribute('data-log-id');
+                    var logElement = document.getElementById('log-' + logId);
+                    if (logElement.style.display === 'none') {
+                        logElement.style.display = 'block';
+                        this.textContent = 'Hide Log';
+                    } else {
+                        logElement.style.display = 'none';
+                        this.textContent = 'Show Log';
+                    }
+                });
+            });
+            
+            // Auto-refresh for pending/running executions
+            var hasPendingOrRunning = document.querySelector('.status-pending, .status-running');
+            if (hasPendingOrRunning) {
+                setTimeout(function() {
+                    window.location.reload();
+                }, 5000);
+            }
+        });
+    </script>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:sentinelvision_feedmodule_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; <a href="{% url 'admin:sentinelvision_feedmodule_change' feed.pk %}">{{ feed.name }}</a>
+    &rsaquo; {% trans 'Execution History' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<div id="content-main">
+    <div class="card">
+        <div class="card-body">
+            <h1>{% trans 'Execution History' %}: {{ feed.name }}</h1>
+            
+            <div class="help">
+                <p>This page shows the execution history for this feed. It will automatically refresh if there are pending or running executions.</p>
+            </div>
+            
+            <div class="module">
+                <h2>Feed Details</h2>
+                <table>
+                    <tr>
+                        <th>Name:</th>
+                        <td>{{ feed.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Type:</th>
+                        <td>{{ feed.feed_type|default:feed.module_type }}</td>
+                    </tr>
+                    <tr>
+                        <th>Company:</th>
+                        <td>{{ feed.company.name|default:"Global (No Company)" }}</td>
+                    </tr>
+                    <tr>
+                        <th>Is Active:</th>
+                        <td>{{ feed.is_active|yesno }}</td>
+                    </tr>
+                    <tr>
+                        <th>Total IOCs Imported:</th>
+                        <td>{{ feed.total_iocs_imported }}</td>
+                    </tr>
+                </table>
+            </div>
+            
+            <div class="actions">
+                <a href="{% url 'admin:run_feed' feed.pk %}" class="button default">Run Feed Now</a>
+                <a href="{% url 'admin:sentinelvision_feedmodule_change' feed.pk %}" class="button">Return to Feed</a>
+            </div>
+            
+            <div class="module">
+                <h2>Execution Records</h2>
+                
+                {% if execution_records %}
+                    <table id="execution-history" class="table">
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Source</th>
+                                <th>Status</th>
+                                <th>Duration</th>
+                                <th>IOCs</th>
+                                <th>User</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in execution_records %}
+                                <tr class="status-{{ record.status }}">
+                                    <td>{{ record.started_at }}</td>
+                                    <td>{{ record.get_source_display }}</td>
+                                    <td><strong>{{ record.get_status_display }}</strong></td>
+                                    <td>
+                                        {% if record.duration_seconds %}
+                                            {% if record.duration_seconds >= 60 %}
+                                                {{ record.duration_seconds|floatformat:0|intdiv:60 }}m {{ record.duration_seconds|floatformat:0|mod:60 }}s
+                                            {% else %}
+                                                {{ record.duration_seconds|floatformat:2 }}s
+                                            {% endif %}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ record.iocs_processed }}</td>
+                                    <td>{{ record.executed_by|default:"Scheduled" }}</td>
+                                    <td>
+                                        <button class="toggle-log-btn button" data-log-id="{{ record.id }}">Show Log</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td colspan="7">
+                                        <div id="log-{{ record.id }}" class="execution-log" style="display: none;">
+                                            {% if record.log %}
+                                                {{ record.log }}
+                                            {% elif record.error_message %}
+                                                <strong>Error:</strong> {{ record.error_message }}
+                                            {% else %}
+                                                <em>No logs available</em>
+                                            {% endif %}
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No execution records found for this feed. <a href="{% url 'admin:run_feed' feed.pk %}">Run it now</a>.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
