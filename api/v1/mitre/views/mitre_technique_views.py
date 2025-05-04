@@ -79,6 +79,11 @@ class MitreTechniqueView(ReadOnlyViewSet):
             return MitreTechniqueDetailSerializer
         return MitreTechniqueSerializer
     
+    @extend_schema(
+        summary="Get MITRE Technique statistics",
+        description="Returns statistics about techniques grouped by tactic, type and platform.",
+        tags=["MITRE Framework"]
+    )
     @action(detail=False, methods=['get'])
     def stats(self, request):
         """Get statistics about techniques"""
