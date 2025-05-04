@@ -129,11 +129,11 @@ class EnrichedIOC(CoreModel):
         # Ensure uniqueness per tenant and IOC
         unique_together = [['company', 'ioc_type', 'value']]
         indexes = [
-            models.Index(fields=['company', 'ioc_type']),
-            models.Index(fields=['company', 'status']),
-            models.Index(fields=['value']),
-            models.Index(fields=['last_checked']),
-            models.Index(fields=['status', 'last_checked']),
+            models.Index(fields=['company', 'ioc_type'], name='sv_ioc_comp_type_idx'),
+            models.Index(fields=['company', 'status'], name='sv_ioc_comp_status_idx'),
+            models.Index(fields=['value'], name='sv_ioc_value_idx'),
+            models.Index(fields=['last_checked'], name='sv_ioc_lastcheck_idx'),
+            models.Index(fields=['status', 'last_checked'], name='sv_ioc_stat_check_idx'),
         ]
     
     def __str__(self):
@@ -254,8 +254,8 @@ class IOCFeedMatch(models.Model):
         # Ensure uniqueness of matches
         unique_together = [['ioc', 'feed']]
         indexes = [
-            models.Index(fields=['ioc', 'feed']),
-            models.Index(fields=['match_time']),
+            models.Index(fields=['ioc', 'feed'], name='sv_match_ioc_feed_idx'),
+            models.Index(fields=['match_time'], name='sv_match_time_idx'),
         ]
     
     def __str__(self):

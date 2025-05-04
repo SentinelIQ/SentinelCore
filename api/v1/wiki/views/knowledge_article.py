@@ -29,13 +29,13 @@ class KnowledgeArticleFilterSet(FilterSet):
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Wiki Articles']),
-    retrieve=extend_schema(tags=['Wiki Articles']),
-    create=extend_schema(tags=['Wiki Articles']),
-    update=extend_schema(tags=['Wiki Articles']),
-    partial_update=extend_schema(tags=['Wiki Articles']),
-    destroy=extend_schema(tags=['Wiki Articles']),
-    render_markdown=extend_schema(tags=['Wiki Articles']),
+    list=extend_schema(tags=['Knowledge Base (Wiki)']),
+    retrieve=extend_schema(tags=['Knowledge Base (Wiki)']),
+    create=extend_schema(tags=['Knowledge Base (Wiki)']),
+    update=extend_schema(tags=['Knowledge Base (Wiki)']),
+    partial_update=extend_schema(tags=['Knowledge Base (Wiki)']),
+    destroy=extend_schema(tags=['Knowledge Base (Wiki)']),
+    render_markdown=extend_schema(tags=['Knowledge Base (Wiki)'])
 )
 class KnowledgeArticleViewSet(StandardViewSet):
     """

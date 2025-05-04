@@ -10,6 +10,7 @@ class TaskCustomActionsMixin:
     Mixin for custom task actions.
     """
     @extend_schema(
+        tags=['Task Management'],
         summary="Mark task as completed",
         description="Mark a task as completed and update the incident timeline",
         responses={200: TaskSerializer}

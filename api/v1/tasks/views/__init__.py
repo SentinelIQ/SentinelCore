@@ -15,31 +15,37 @@ from .task_custom_actions import TaskCustomActionsMixin
 
 @extend_schema_view(
     list=extend_schema(
+        tags=['Task Management'],
         summary="List all tasks",
         description="Get a paginated list of all tasks for the current user's company."
     ),
     retrieve=extend_schema(
+        tags=['Task Management'],
         summary="Get task detail",
         description="Retrieve detailed information about a specific task."
     ),
     create=extend_schema(
+        tags=['Task Management'],
         summary="Create a new task",
         description="Create a new task with the provided data."
     ),
     update=extend_schema(
+        tags=['Task Management'],
         summary="Update a task",
         description="Update all fields of an existing task."
     ),
     partial_update=extend_schema(
+        tags=['Task Management'],
         summary="Partially update a task",
         description="Update specific fields of an existing task."
     ),
     destroy=extend_schema(
+        tags=['Task Management'],
         summary="Delete a task",
         description="Permanently delete a task."
     )
 )
-@extend_schema(tags=['Tasks'])
+@extend_schema(tags=['Task Management'])
 class TaskViewSet(
     TaskDetailViewMixin,
     TaskCreateViewMixin,

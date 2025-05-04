@@ -38,22 +38,22 @@ class MitreTechniqueFilter(FilterSet):
     list=extend_schema(
         summary="List MITRE ATT&CK Techniques",
         description="Returns a list of MITRE ATT&CK Techniques.",
-        tags=["MITRE ATT&CK"]
+        tags=["MITRE Framework"]
     ),
     retrieve=extend_schema(
         summary="Retrieve MITRE ATT&CK Technique",
         description="Returns details of a specific MITRE ATT&CK Technique.",
-        tags=["MITRE ATT&CK"]
+        tags=["MITRE Framework"]
     ),
     related_entities=extend_schema(
         summary="Get entities related to this MITRE Technique",
         description="Returns counts of alerts, incidents, and observables linked to this technique.",
-        tags=["MITRE ATT&CK"]
+        tags=["MITRE Framework"]
     ),
     subtechniques=extend_schema(
         summary="Get subtechniques of this MITRE Technique",
         description="Returns a list of subtechniques for this parent technique.",
-        tags=["MITRE ATT&CK"]
+        tags=["MITRE Framework"]
     )
 )
 class MitreTechniqueView(ReadOnlyViewSet):

@@ -17,7 +17,7 @@ class AlertSeverityView(APIView):
     permission_classes = [IsAuthenticated, CanViewDashboard]
     
     @extend_schema(
-        tags=['Dashboard'],
+        tags=['System Monitoring & Operations'],
         parameters=[
             OpenApiParameter(name='start_date', type=str, description='Start date (YYYY-MM-DD)'),
             OpenApiParameter(name='end_date', type=str, description='End date (YYYY-MM-DD)'),

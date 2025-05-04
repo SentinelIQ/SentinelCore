@@ -14,12 +14,12 @@ from sentinelvision.serializers import (
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['SentinelVision Executions']),
-    retrieve=extend_schema(tags=['SentinelVision Executions']),
-    create=extend_schema(tags=['SentinelVision Executions']),
-    update=extend_schema(tags=['SentinelVision Executions']),
-    partial_update=extend_schema(tags=['SentinelVision Executions']),
-    destroy=extend_schema(tags=['SentinelVision Executions']),
+    list=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
+    retrieve=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
+    create=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
+    update=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
+    partial_update=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
+    destroy=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
 )
 class ExecutionRecordViewSet(StandardViewSet):
     """
@@ -54,7 +54,7 @@ class ExecutionRecordViewSet(StandardViewSet):
         return self.serializer_class
     
     @extend_schema(
-        tags=['SentinelVision Executions'],
+        tags=['Threat Intelligence (SentinelVision)'],
         description="Retry a failed execution"
     )
     @action(detail=True, methods=['post'], permission_classes=[permissions.IsAuthenticated, HasEntityPermission])

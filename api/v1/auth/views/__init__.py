@@ -16,7 +16,7 @@ from .token import CustomTokenObtainPairView, CustomTokenRefreshView, EmailPassw
 User = get_user_model()
 
 
-@extend_schema(tags=['Users'])
+@extend_schema(tags=['Authentication & Access Control'])
 class UserViewSet(
     UserCreateMixin,
     UserDetailMixin,

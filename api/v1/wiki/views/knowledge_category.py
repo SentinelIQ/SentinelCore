@@ -13,12 +13,12 @@ logger = logging.getLogger('api.wiki')
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['Wiki Categories']),
-    retrieve=extend_schema(tags=['Wiki Categories']),
-    create=extend_schema(tags=['Wiki Categories']),
-    update=extend_schema(tags=['Wiki Categories']),
-    partial_update=extend_schema(tags=['Wiki Categories']),
-    destroy=extend_schema(tags=['Wiki Categories']),
+    list=extend_schema(tags=['Knowledge Base (Wiki)']),
+    retrieve=extend_schema(tags=['Knowledge Base (Wiki)']),
+    create=extend_schema(tags=['Knowledge Base (Wiki)']),
+    update=extend_schema(tags=['Knowledge Base (Wiki)']),
+    partial_update=extend_schema(tags=['Knowledge Base (Wiki)']),
+    destroy=extend_schema(tags=['Knowledge Base (Wiki)'])
 )
 class KnowledgeCategoryViewSet(StandardViewSet):
     """

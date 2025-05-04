@@ -18,7 +18,7 @@ class CustomMetricsView(APIView):
     permission_classes = [IsAuthenticated, CanViewDashboard]
     
     @extend_schema(
-        tags=['Dashboard'],
+        tags=['System Monitoring & Operations'],
         parameters=[
             OpenApiParameter(name='metric_type', type=str, 
                             description='Type of metric (alerts, incidents, tasks)'),

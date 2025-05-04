@@ -6,12 +6,8 @@ from sentinelvision.responders.block_ip import BlockIPResponder
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['SentinelVision Responders']),
-    retrieve=extend_schema(tags=['SentinelVision Responders']),
-    create=extend_schema(tags=['SentinelVision Responders']),
-    update=extend_schema(tags=['SentinelVision Responders']),
-    partial_update=extend_schema(tags=['SentinelVision Responders']),
-    destroy=extend_schema(tags=['SentinelVision Responders']),
+    list=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
+  extend_schema(tags=['Threat Intelligence (SentinelVision)']espextend_schema(tags=['Threat Intelligence (SentinelVision)']nelextend_schema(tags=['Threat Intelligence (SentinelVision)']ags=['Sentiextend_schema(tags=['Threat Intelligence (SentinelVision)']nd_sextend_schema(tags=['Threat Intelligence (SentinelVision)']estroy=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
 )
 class ResponderViewSet(StandardViewSet):
     """

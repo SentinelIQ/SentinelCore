@@ -2,6 +2,7 @@ from rest_framework import serializers
 from companies.models import Company
 from auth_app.models import User
 from django.db import transaction
+from api.v1.auth.enums import UserRoleEnum
 
 
 class CompanyCreateSerializer(serializers.ModelSerializer):
@@ -55,7 +56,7 @@ class CompanyCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("This username is already in use.")
             
         # Make sure role is admin_company
-        if 'role' in value and value['role'] != User.Role.ADMIN_COMPANY:
+        if 'role' in value and value['role'] != UserRoleEnum.ADMIN_COMPANY.value:
             raise serializers.ValidationError("The company administrator must have the 'admin_company' role.")
             
         return value
@@ -85,7 +86,7 @@ class CompanyCreateSerializer(serializers.ModelSerializer):
             password=password,
             first_name=first_name,
             last_name=last_name,
-            role=User.Role.ADMIN_COMPANY,
+            role=UserRoleEnum.ADMIN_COMPANY.value,
             company=company
         )
         

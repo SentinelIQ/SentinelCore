@@ -27,6 +27,7 @@ class AlertCustomActionsMixin:
     Mixin for custom alert actions such as escalation and ingestion
     """
     @extend_schema(
+        tags=['Alert Management'],
         summary="Escalate alert to incident",
         description="Converts an alert to an incident by creating a new incident linked to this alert and changes the alert status to 'escalated'.",
         responses={
@@ -112,6 +113,7 @@ class AlertCustomActionsMixin:
             )
 
     @extend_schema(
+        tags=['Alert Management'],
         summary="Ingest alerts from external systems",
         description="Endpoint for external systems to send alerts to Sentineliq with deduplication.",
         request=AlertCreateSerializer,
@@ -241,6 +243,7 @@ class AlertCustomActionsMixin:
             )
 
     @extend_schema(
+        tags=['Alert Management'],
         summary="List observables in alert",
         description="Lists all observables associated with this alert.",
         responses={
@@ -262,6 +265,7 @@ class AlertCustomActionsMixin:
         )
 
     @extend_schema(
+        tags=['Alert Management'],
         summary="Add observable to alert",
         description="Links an existing observable to this alert.",
         request=ObservableAddToAlertSerializer,
@@ -322,6 +326,7 @@ class AlertCustomActionsMixin:
             )
 
     @extend_schema(
+        tags=['Alert Management'],
         summary="Remove observable from alert",
         description="Removes the link between an observable and this alert.",
         parameters=[
@@ -374,6 +379,7 @@ class AlertCustomActionsMixin:
             )
 
     @extend_schema(
+        tags=['Alert Management'],
         summary="Sync observables from JSON",
         description="Convert observables stored in observable_data JSON field to proper M2M relationships.",
         responses={
@@ -476,6 +482,7 @@ class AlertCustomActionsMixin:
             )
 
     @extend_schema(
+        tags=['Alert Management'],
         summary="Trigger SentinelVision pipeline",
         description="Runs a SentinelVision enrichment pipeline on this alert.",
         parameters=[

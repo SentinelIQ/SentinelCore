@@ -12,12 +12,12 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
     list=extend_schema(
         summary="List MITRE ATT&CK Tactics",
         description="Returns a list of MITRE ATT&CK Tactics.",
-        tags=["MITRE ATT&CK"]
+        tags=["MITRE Framework"]
     ),
     retrieve=extend_schema(
         summary="Retrieve MITRE ATT&CK Tactic",
         description="Returns details of a specific MITRE ATT&CK Tactic.",
-        tags=["MITRE ATT&CK"]
+        tags=["MITRE Framework"]
     )
 )
 class MitreTacticView(ReadOnlyViewSet):

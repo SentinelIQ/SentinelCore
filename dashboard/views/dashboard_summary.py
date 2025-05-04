@@ -18,7 +18,7 @@ class DashboardSummaryView(APIView):
     permission_classes = [IsAuthenticated, CanViewDashboard]
     
     @extend_schema(
-        tags=['Dashboard'],
+        tags=['System Monitoring & Operations'],
         operation_id='dashboard_summary',
         description="""
         Get a comprehensive dashboard summary including alerts, incidents, and tasks.

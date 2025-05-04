@@ -12,7 +12,7 @@ User = get_user_model()
 logger = logging.getLogger(__name__)
 
 
-@extend_schema(tags=['Users'])
+@extend_schema(tags=['Authentication & Access Control'])
 class UserViewSet(viewsets.ModelViewSet):
     """
     API endpoint for users.

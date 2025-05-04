@@ -14,5 +14,8 @@ class SentinelvisionConfig(AppConfig):
         import sentinelvision.signals
         
         # Import and run feed discovery to ensure all feeds are registered
-        from sentinelvision.feeds import discover_feeds
+        from sentinelvision.feeds import discover_feeds, ensure_feeds_in_database
         discover_feeds()
+        
+        # Ensure all discovered feeds have database records
+        ensure_feeds_in_database()

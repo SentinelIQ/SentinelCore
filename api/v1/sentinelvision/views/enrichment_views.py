@@ -19,6 +19,7 @@ from api.v1.sentinelvision.serializers import (
 from sentinelvision.permissions import CanExecuteFeedPermission
 from sentinelvision.tasks.enrichment_tasks import enrich_observable
 
+@extend_schema(tags=['Threat Intelligence (SentinelVision)'])
 class EnrichmentViewSet(viewsets.ViewSet):
     """
     API endpoints for enriching and managing observables (IOCs).
@@ -26,7 +27,7 @@ class EnrichmentViewSet(viewsets.ViewSet):
     permission_classes = [CanExecuteFeedPermission]
     
     @extend_schema(
-        tags=['sentinelvision', 'enrichment'],
+        tags=['Threat Intelligence (SentinelVision)'],
         description='Enrich an observable (IOC) by checking it against all relevant feeds.',
         request=EnrichObservableRequestSerializer,
         responses={
@@ -118,7 +119,7 @@ class EnrichmentViewSet(viewsets.ViewSet):
         )
     
     @extend_schema(
-        tags=['sentinelvision', 'enrichment'],
+        tags=['Threat Intelligence (SentinelVision)'],
         description='List enriched observables (IOCs) for the current company.',
         responses={
             200: EnrichedIOCSerializer(many=True),
@@ -189,7 +190,7 @@ class EnrichmentViewSet(viewsets.ViewSet):
         )
     
     @extend_schema(
-        tags=['sentinelvision', 'enrichment'],
+        tags=['Threat Intelligence (SentinelVision)'],
         description='Get details of a specific enriched observable (IOC).',
         responses={
             200: EnrichedIOCSerializer(),
@@ -217,7 +218,7 @@ class EnrichmentViewSet(viewsets.ViewSet):
         )
     
     @extend_schema(
-        tags=['sentinelvision', 'enrichment'],
+        tags=['Threat Intelligence (SentinelVision)'],
         description='Force re-enrichment of a specific observable (IOC).',
         responses={
             200: StandardResponse(status_type='success'),

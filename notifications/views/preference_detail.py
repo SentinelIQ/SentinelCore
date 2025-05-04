@@ -18,7 +18,7 @@ class UserNotificationPreferenceDetailView(RetrieveModelMixin):
     lookup_url_kwarg = 'user_id'
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Get user notification preferences",
         description="Retrieves notification preferences for a specific user. "
                     "Users can view their own preferences, and administrators with "

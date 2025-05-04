@@ -45,7 +45,7 @@ logger = logging.getLogger('api.observables')
         description="Permanently delete an observable."
     )
 )
-@extend_schema(tags=['Observables'])
+@extend_schema(tags=['Observables & IOCs'])
 class ObservableViewSet(
     ObservableDetailViewMixin,
     ObservableCreateViewMixin,

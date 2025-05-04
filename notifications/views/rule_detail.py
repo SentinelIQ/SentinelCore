@@ -21,7 +21,7 @@ class NotificationRuleDetailView(RetrieveUpdateDestroyAPIView):
     serializer_class = NotificationRuleSerializer
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Get notification rule details",
         description="Retrieves details of a specific notification rule.",
         responses={200: NotificationRuleSerializer}
@@ -33,7 +33,7 @@ class NotificationRuleDetailView(RetrieveUpdateDestroyAPIView):
         return self.retrieve(request, *args, **kwargs)
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Update notification rule",
         description="Update an existing notification rule.",
         request=NotificationRuleSerializer,
@@ -46,7 +46,7 @@ class NotificationRuleDetailView(RetrieveUpdateDestroyAPIView):
         return self.update(request, *args, **kwargs)
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Partially update notification rule",
         description="Partially update an existing notification rule.",
         request=NotificationRuleSerializer,
@@ -59,7 +59,7 @@ class NotificationRuleDetailView(RetrieveUpdateDestroyAPIView):
         return self.partial_update(request, *args, **kwargs)
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Delete notification rule",
         description="Delete an existing notification rule.",
         responses={204: None}

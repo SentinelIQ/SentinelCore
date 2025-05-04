@@ -19,7 +19,7 @@ from .alert_detail import AlertDetailMixin
 from .alert_custom_actions import AlertCustomActionsMixin
 
 
-@extend_schema(tags=['Alerts'])
+@extend_schema(tags=['Alert Management'])
 class AlertViewSet(AlertCreateMixin, AlertDetailMixin, AlertCustomActionsMixin, StandardViewSet):
     """
     API endpoint for alert management.

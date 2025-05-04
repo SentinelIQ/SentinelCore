@@ -61,7 +61,7 @@ class NotificationChannelDetailView(RetrieveUpdateDestroyAPIView):
         return NotificationChannelSerializer
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Get notification channel details",
         description="Retrieves details of a specific notification channel.",
         responses={200: NotificationChannelSerializer}
@@ -74,7 +74,7 @@ class NotificationChannelDetailView(RetrieveUpdateDestroyAPIView):
         return self.retrieve(request, *args, **kwargs)
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Update notification channel",
         description="Update an existing notification channel.",
         request=NotificationChannelSerializer,
@@ -88,7 +88,7 @@ class NotificationChannelDetailView(RetrieveUpdateDestroyAPIView):
         return self.update(request, *args, **kwargs)
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Partially update notification channel",
         description="Partially update an existing notification channel.",
         request=NotificationChannelSerializer,
@@ -102,7 +102,7 @@ class NotificationChannelDetailView(RetrieveUpdateDestroyAPIView):
         return self.partial_update(request, *args, **kwargs)
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Delete notification channel",
         description="Delete an existing notification channel.",
         responses={204: None}

@@ -9,7 +9,7 @@ from api.core.responses import success_response, error_response
 
 
 @extend_schema(
-    tags=['System'],
+    tags=['System Monitoring & Operations'],
     summary="Test Sentry integration",
     description="Endpoint to test if Sentry error reporting is working correctly. Admin only.",
     responses={

@@ -57,7 +57,7 @@ class WhoAmIResponseSerializer(serializers.Serializer):
 
 
 @extend_schema(
-    tags=['Common'],
+    tags=['System Monitoring & Operations'],
     summary="Health check endpoint",
     description="Returns a 200 OK if the API is up and running",
     responses={
@@ -82,7 +82,7 @@ def health_check(request):
 
 
 @extend_schema(
-    tags=['Common'],
+    tags=['System Monitoring & Operations'],
     summary="Current user information",
     description="Returns information about the currently authenticated user",
     responses={
@@ -118,7 +118,7 @@ def whoami(request):
     return success_response(data)
 
 
-@extend_schema(tags=['Common'])
+@extend_schema(tags=['System Monitoring & Operations'])
 class CommonViewSet(viewsets.GenericViewSet):
     """
     Common API endpoints for system-wide functionality.

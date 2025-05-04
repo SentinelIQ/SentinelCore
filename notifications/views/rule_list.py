@@ -29,7 +29,7 @@ class NotificationRuleListView(ListAPIView):
     ordering = ['-created_at']
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="List notification rules",
         description="Returns a paginated list of notification rules for the current tenant, with optional filtering.",
         parameters=[

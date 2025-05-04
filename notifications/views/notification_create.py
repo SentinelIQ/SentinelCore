@@ -17,7 +17,7 @@ class NotificationCreateView(CreateModelMixin):
     permission_classes = [ManageNotificationsPermission]
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Create a new notification",
         description="Creates a new notification to be sent to users. "
                     "Requires manage_notifications permission. "

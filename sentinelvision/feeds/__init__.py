@@ -243,6 +243,99 @@ def get_all_feed_tasks():
     """
     return TASK_REGISTRY
 
+def ensure_feeds_in_database():
+    """
+    Ensure that all discovered feeds have entries in the database.
+    This function creates database records for any feeds that don't already exist.
+    
+    Native feeds (AlienVault, Blocklist.de, SSL Certificate Blacklist) are configured
+    as global feeds (company=None), while test feeds are tenant-specific.
+    """
+    from sentinelvision.models import FeedModule
+    from companies.models import Company
+    import logging
+
+    logger = logging.getLogger('sentinelvision.feeds')
+    
+    # Get all registered feeds
+    feeds = get_all_feeds()
+    
+    # Define which feeds should be global
+    global_feeds = [
+        'alienvault_reputation',
+        'blocklist_de',
+        'ssl_blacklist'
+    ]
+    
+    # Get default company (if needed for non-global feeds)
+    default_company = None
+    try:
+        # Try to get the first company, but handle the case where no companies exist
+        default_company = Company.objects.first()
+    except Exception as e:
+        logger.warning(f"No companies found when registering feeds: {str(e)}")
+    
+    # For each feed, make sure it has a database entry
+    feed_count = 0
+    for feed_id, feed_class in feeds.items():
+        try:
+            # Check if feed already exists in the database
+            existing_feed = FeedModule.objects.filter(
+                module_type='feed',
+                name=feed_class._meta.verbose_name
+            ).first()
+            
+            if not existing_feed:
+                # Determine if this should be a global feed
+                is_global_feed = feed_id in global_feeds
+                company = None if is_global_feed else default_company
+                
+                # Create a database entry for the feed
+                feed = FeedModule.objects.create(
+                    name=feed_class._meta.verbose_name,
+                    module_type='feed',
+                    description=feed_class.__doc__.strip() if feed_class.__doc__ else '',
+                    is_active=True,
+                    company=company
+                )
+                
+                # Initialize the feed_url and interval_hours if available
+                if hasattr(feed_class, 'default_feed_url'):
+                    feed.feed_url = feed_class.default_feed_url
+                else:
+                    # Set a placeholder URL - should be updated by admins
+                    feed.feed_url = 'https://example.com/feed' 
+                
+                if hasattr(feed_class, 'default_interval_hours'):
+                    feed.interval_hours = feed_class.default_interval_hours
+                
+                feed.save()
+                
+                logger.info(
+                    f"Created database entry for feed {feed.name} ({'' if is_global_feed else 'tenant-specific'})",
+                    extra={
+                        'feed_id': feed_id,
+                        'feed_name': feed.name,
+                        'is_global': is_global_feed
+                    }
+                )
+                
+                feed_count += 1
+        except Exception as e:
+            logger.error(
+                f"Error ensuring database entry for feed {feed_id}: {str(e)}",
+                extra={
+                    'feed_id': feed_id,
+                    'error': str(e)
+                },
+                exc_info=True
+            )
+    
+    if feed_count > 0:
+        logger.info(f"Created {feed_count} feed entries in the database")
+    else:
+        logger.info("No new feed entries needed to be created in the database")
+
 def discover_feeds():
     """
     Dynamically discover and register all feed modules.

@@ -16,7 +16,7 @@ class NotificationDetailView(RetrieveModelMixin):
     lookup_field = 'id'
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Get notification details",
         description="Retrieves detailed information about a specific notification. "
                     "Users can only view notifications where they are recipients or "

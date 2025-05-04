@@ -22,7 +22,7 @@ class NotificationChannelListView(ListModelMixin):
     ordering = ['name']
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="List notification channels",
         description="Returns a list of notification channels for the current company. "
                     "Requires manage_notifications permission.",

@@ -23,7 +23,7 @@ class NotificationTestView(APIView):
     permission_classes = [ManageNotificationsPermission]
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Test a notification channel",
         description="Sends a test message through the specified notification channel to verify its configuration.",
         request={

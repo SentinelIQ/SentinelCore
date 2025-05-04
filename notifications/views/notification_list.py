@@ -23,7 +23,7 @@ class NotificationListView(ListModelMixin):
     ordering = ['-created_at']
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="List notifications",
         description="Returns a list of notifications for the current user. This includes "
                     "notifications where the user is a direct recipient and company-wide "

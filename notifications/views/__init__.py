@@ -38,7 +38,7 @@ from .rule_detail import NotificationRuleDetailView
 from .rule_create import NotificationRuleCreateView
 
 # View Mixins for Notifications
-@extend_schema(tags=['Notifications'])
+@extend_schema(tags=['Notification System'])
 class NotificationViewSet(
     NotificationListView,
     NotificationDetailView,
@@ -58,7 +58,7 @@ class NotificationViewSet(
     success_message_delete = "Notification deleted successfully"
 
 # View Mixins for Notification Channels
-@extend_schema(tags=['Notification Channels'])
+@extend_schema(tags=['Notification System'])
 class NotificationChannelViewSet(
     NotificationChannelListView,
     NotificationChannelDetailView,
@@ -77,7 +77,7 @@ class NotificationChannelViewSet(
     success_message_delete = "Notification channel deleted successfully"
 
 # View Mixins for User Notification Preferences
-@extend_schema(tags=['Notification Preferences'])
+@extend_schema(tags=['Notification System'])
 class UserNotificationPreferenceViewSet(
     UserNotificationPreferenceDetailView,
     UserNotificationPreferenceUpdateView,
@@ -95,7 +95,7 @@ class UserNotificationPreferenceViewSet(
     success_message_delete = "Notification preferences deleted successfully"
 
 # View Mixins for Notification Rules
-@extend_schema(tags=['Notification Rules'])
+@extend_schema(tags=['Notification System'])
 class NotificationRuleViewSet(
     NotificationRuleListView,
     NotificationRuleDetailView,

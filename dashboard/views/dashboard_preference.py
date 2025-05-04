@@ -18,7 +18,7 @@ class DashboardPreferenceView(APIView):
     permission_classes = [IsAuthenticated, CanViewDashboard]
     
     @extend_schema(
-        tags=['Dashboard'],
+        tags=['System Monitoring & Operations'],
         responses={200: DashboardPreferenceSerializer}
     )
     def get(self, request):
@@ -53,7 +53,7 @@ class DashboardPreferenceView(APIView):
             )
     
     @extend_schema(
-        tags=['Dashboard'],
+        tags=['System Monitoring & Operations'],
         request=DashboardPreferenceSerializer,
         responses={200: DashboardPreferenceSerializer}
     )

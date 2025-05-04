@@ -13,7 +13,7 @@ import logging
 logger = logging.getLogger('api.auth')
 
 
-@extend_schema(tags=['Authentication'])
+@extend_schema(tags=['Authentication & Access Control'])
 class CustomTokenObtainPairView(TokenObtainPairView):
     """
     Custom view for obtaining JWT tokens with user information.
@@ -66,7 +66,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
         )
 
 
-@extend_schema(tags=['Authentication'])
+@extend_schema(tags=['Authentication & Access Control'])
 class EmailPasswordTokenObtainView(TokenObtainPairView):
     """
     View for authentication using email and password instead of username and password.
@@ -119,7 +119,7 @@ class EmailPasswordTokenObtainView(TokenObtainPairView):
         )
 
 
-@extend_schema(tags=['Authentication'])
+@extend_schema(tags=['Authentication & Access Control'])
 class CustomTokenRefreshView(TokenRefreshView):
     """
     Custom view for refreshing JWT tokens with user information.

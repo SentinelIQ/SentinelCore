@@ -60,7 +60,7 @@ from .company_custom_actions import CompanyCustomActionsMixin
         description="Permanently delete a company and all associated data. Only accessible to superusers."
     )
 )
-@extend_schema(tags=['Companies'])
+@extend_schema(tags=['Company Management'])
 class CompanyViewSet(
     CompanyCreateMixin,
     CompanyDetailMixin,

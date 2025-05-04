@@ -11,7 +11,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-@extend_schema(tags=['Authentication'])
+@extend_schema(tags=['Authentication & Access Control'])
 class LoginView(TokenObtainPairView):
     """
     API endpoint for user login.
@@ -49,7 +49,7 @@ class LoginView(TokenObtainPairView):
         )
 
 
-@extend_schema(tags=['Authentication'])
+@extend_schema(tags=['Authentication & Access Control'])
 class RefreshTokenView(TokenRefreshView):
     """
     API endpoint for refreshing JWT tokens.
@@ -86,7 +86,7 @@ class RefreshTokenView(TokenRefreshView):
         )
 
 
-@extend_schema(tags=['Authentication'])
+@extend_schema(tags=['Authentication & Access Control'])
 class LogoutView(APIView):
     """
     API endpoint for user logout.

@@ -19,7 +19,7 @@ from .incident_detail import IncidentDetailMixin
 from .incident_custom_actions import IncidentCustomActionsMixin
 
 
-@extend_schema(tags=['Incidents'])
+@extend_schema(tags=['Incident Management'])
 class IncidentViewSet(IncidentCreateMixin, IncidentDetailMixin, IncidentCustomActionsMixin, StandardViewSet):
     """
     API endpoint for incident management.

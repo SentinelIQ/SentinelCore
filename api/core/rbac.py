@@ -54,8 +54,10 @@ class HasEntityPermission(permissions.BasePermission):
             
         # Check for custom action
         custom_action = None
-        if view.action not in ['list', 'retrieve', 'create', 'update', 'partial_update', 'destroy']:
-            custom_action = view.action
+        # Handle both ViewSets (with action) and APIViews (without action)
+        action = getattr(view, 'action', None)
+        if action is not None and action not in ['list', 'retrieve', 'create', 'update', 'partial_update', 'destroy']:
+            custom_action = action
             
         # Get the required permission for this action
         required_permission = get_required_permission(
@@ -71,7 +73,7 @@ class HasEntityPermission(permissions.BasePermission):
         logger.debug(
             f"RBAC: User {request.user.username} with role {request.user.role} "
             f"requesting {request.method} on {entity_type} "
-            f"(action: {view.action}). Required permission: {required_permission}. "
+            f"(action: {getattr(view, 'action', request.method.lower())}). Required permission: {required_permission}. "
             f"Result: {'GRANTED' if has_perm else 'DENIED'}"
         )
         

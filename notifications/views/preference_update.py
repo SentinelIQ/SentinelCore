@@ -20,7 +20,7 @@ class UserNotificationPreferenceUpdateView(UpdateModelMixin):
     lookup_url_kwarg = 'user_id'
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Update user notification preferences",
         description="Updates notification preferences for a specific user. "
                     "Users can update their own preferences, and administrators with "

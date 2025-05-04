@@ -64,7 +64,7 @@ def create_feed_registry(sender, instance, created, **kwargs):
     if created:
         FeedRegistry.objects.create(
             name=instance.name,
-            feed_type=instance.feed_type,
+            feed_type=instance.module_type,
             company=instance.company,
             source_url=instance.feed_url,
             description=instance.description,
@@ -75,7 +75,7 @@ def create_feed_registry(sender, instance, created, **kwargs):
             "Created feed registry",
             extra={
                 "module_name": instance.name,
-                "feed_type": instance.feed_type
+                "feed_type": instance.module_type
             }
         )
 

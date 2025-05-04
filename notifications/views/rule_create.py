@@ -21,7 +21,7 @@ class NotificationRuleCreateView(CreateAPIView):
     serializer_class = NotificationRuleSerializer
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Create notification rule",
         description="Create a new notification rule for triggering notifications on system events.",
         request=NotificationRuleSerializer,

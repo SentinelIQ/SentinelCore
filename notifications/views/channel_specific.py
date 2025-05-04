@@ -76,7 +76,7 @@ class EmailChannelCreateView(BaseChannelCreateView):
     channel_display_name = 'Email'
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Create email channel",
         description="""
         Create a new email notification channel with SMTP configuration.
@@ -111,7 +111,7 @@ class SlackChannelCreateView(BaseChannelCreateView):
     channel_display_name = 'Slack'
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Create Slack channel",
         description="""
         Create a new Slack notification channel with webhook configuration.
@@ -143,7 +143,7 @@ class MattermostChannelCreateView(BaseChannelCreateView):
     channel_display_name = 'Mattermost'
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Create Mattermost channel",
         description="""
         Create a new Mattermost notification channel with webhook configuration.
@@ -177,7 +177,7 @@ class WebhookChannelCreateView(BaseChannelCreateView):
     channel_display_name = 'Webhook'
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Create webhook channel",
         description="""
         Create a new webhook notification channel.
@@ -209,7 +209,7 @@ class SMSChannelCreateView(BaseChannelCreateView):
     channel_display_name = 'SMS'
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Create SMS channel",
         description="""
         Create a new SMS notification channel.

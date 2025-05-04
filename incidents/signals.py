@@ -6,6 +6,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from django.forms.models import model_to_dict
 from .models import Incident, TimelineEvent, IncidentObservable, IncidentTask
+from api.v1.incidents.enums import TimelineEventTypeEnum
 
 User = get_user_model()
 logger = logging.getLogger('api.incidents')
@@ -28,7 +29,7 @@ def track_incident_field_changes(sender, instance, **kwargs):
         if old_incident.description != instance.description:
             TimelineEvent.objects.create(
                 incident=instance,
-                type=TimelineEvent.EventType.UPDATED,
+                type=TimelineEventTypeEnum.UPDATED.value,
                 title="Description updated",
                 message=f"Incident description was updated",
                 company=instance.company,
@@ -43,7 +44,7 @@ def track_incident_field_changes(sender, instance, **kwargs):
         if old_incident.status != instance.status:
             TimelineEvent.objects.create(
                 incident=instance,
-                type=TimelineEvent.EventType.STATUS_CHANGED,
+                type=TimelineEventTypeEnum.STATUS_CHANGED.value,
                 title=f"Status changed: {old_incident.get_status_display()} → {instance.get_status_display()}",
                 message=f"Incident status was changed from {old_incident.get_status_display()} to {instance.get_status_display()}",
                 company=instance.company,
@@ -58,7 +59,7 @@ def track_incident_field_changes(sender, instance, **kwargs):
         if old_incident.severity != instance.severity:
             TimelineEvent.objects.create(
                 incident=instance,
-                type=TimelineEvent.EventType.UPDATED,
+                type=TimelineEventTypeEnum.UPDATED.value,
                 title=f"Severity changed: {old_incident.get_severity_display()} → {instance.get_severity_display()}",
                 message=f"Incident severity was changed from {old_incident.get_severity_display()} to {instance.get_severity_display()}",
                 company=instance.company,
@@ -76,7 +77,7 @@ def track_incident_field_changes(sender, instance, **kwargs):
             
             TimelineEvent.objects.create(
                 incident=instance,
-                type=TimelineEvent.EventType.ASSIGNED,
+                type=TimelineEventTypeEnum.ASSIGNED.value,
                 title=f"Assignee changed: {old_assignee} → {new_assignee}",
                 message=f"Incident assignee was changed from {old_assignee} to {new_assignee}",
                 company=instance.company,
@@ -91,7 +92,7 @@ def track_incident_field_changes(sender, instance, **kwargs):
         if old_incident.tlp != instance.tlp:
             TimelineEvent.objects.create(
                 incident=instance,
-                type=TimelineEvent.EventType.UPDATED,
+                type=TimelineEventTypeEnum.UPDATED.value,
                 title=f"TLP changed: {old_incident.get_tlp_display()} → {instance.get_tlp_display()}",
                 message=f"Incident TLP level was changed from {old_incident.get_tlp_display()} to {instance.get_tlp_display()}",
                 company=instance.company,
@@ -105,7 +106,7 @@ def track_incident_field_changes(sender, instance, **kwargs):
         if old_incident.pap != instance.pap:
             TimelineEvent.objects.create(
                 incident=instance,
-                type=TimelineEvent.EventType.UPDATED,
+                type=TimelineEventTypeEnum.UPDATED.value,
                 title=f"PAP changed: {old_incident.get_pap_display()} → {instance.get_pap_display()}",
                 message=f"Incident PAP level was changed from {old_incident.get_pap_display()} to {instance.get_pap_display()}",
                 company=instance.company,
@@ -134,7 +135,7 @@ def sync_timeline_to_events(sender, instance, created, **kwargs):
         try:
             TimelineEvent.objects.create(
                 incident=instance,
-                type=TimelineEvent.EventType.CREATED,
+                type=TimelineEventTypeEnum.CREATED.value,
                 title="Incident created",
                 message=f"Incident '{instance.title}' was created",
                 user=instance.created_by,
@@ -166,23 +167,23 @@ def sync_timeline_to_events(sender, instance, created, **kwargs):
             
             # Map timeline entry to event type
             entry_type = entry.get('type', 'note')
-            event_type = TimelineEvent.EventType.NOTE
+            event_type = TimelineEventTypeEnum.NOTE.value
             
             # Map common types
             if entry_type == 'note':
-                event_type = TimelineEvent.EventType.NOTE
+                event_type = TimelineEventTypeEnum.NOTE.value
             elif entry_type == 'assignment':
-                event_type = TimelineEvent.EventType.ASSIGNED
+                event_type = TimelineEventTypeEnum.ASSIGNED.value
             elif entry_type == 'status_change':
-                event_type = TimelineEvent.EventType.STATUS_CHANGED
+                event_type = TimelineEventTypeEnum.STATUS_CHANGED.value
             elif entry_type == 'alert_link':
-                event_type = TimelineEvent.EventType.ALERT_LINKED
+                event_type = TimelineEventTypeEnum.ALERT_LINKED.value
             elif entry_type == 'task_update':
-                event_type = TimelineEvent.EventType.TASK_ADDED
+                event_type = TimelineEventTypeEnum.TASK_ADDED.value
             elif entry_type == 'action':
-                event_type = TimelineEvent.EventType.ACTION
+                event_type = TimelineEventTypeEnum.ACTION.value
             elif entry_type == 'system':
-                event_type = TimelineEvent.EventType.SYSTEM
+                event_type = TimelineEventTypeEnum.SYSTEM.value
             
             # Get user if available
             user = None
@@ -230,7 +231,7 @@ def observable_added_timeline_event(sender, instance, created, **kwargs):
         try:
             TimelineEvent.objects.create(
                 incident=instance.incident,
-                type=TimelineEvent.EventType.UPDATED,
+                type=TimelineEventTypeEnum.UPDATED.value,
                 title=f"Observable added: {instance.observable.get_type_display()}",
                 message=f"Observable {instance.observable.get_type_display()}: {instance.observable.value} added to incident",
                 company=instance.incident.company,
@@ -261,7 +262,7 @@ def observable_updated_timeline_event(sender, instance, **kwargs):
             status = "marked as IOC" if instance.is_ioc else "unmarked as IOC"
             TimelineEvent.objects.create(
                 incident=instance.incident,
-                type=TimelineEvent.EventType.UPDATED,
+                type=TimelineEventTypeEnum.UPDATED.value,
                 title=f"Observable {status}",
                 message=f"Observable {instance.observable.get_type_display()}: {instance.observable.value} {status}",
                 company=instance.incident.company,
@@ -284,7 +285,7 @@ def observable_removed_timeline_event(sender, instance, **kwargs):
     try:
         TimelineEvent.objects.create(
             incident=instance.incident,
-            type=TimelineEvent.EventType.UPDATED,
+            type=TimelineEventTypeEnum.UPDATED.value,
             title=f"Observable removed: {instance.observable.get_type_display()}",
             message=f"Observable {instance.observable.get_type_display()}: {instance.observable.value} removed from incident",
             company=instance.incident.company,
@@ -308,7 +309,7 @@ def task_created_or_updated_timeline_event(sender, instance, created, **kwargs):
         try:
             TimelineEvent.objects.create(
                 incident=instance.incident,
-                type=TimelineEvent.EventType.TASK_ADDED,
+                type=TimelineEventTypeEnum.TASK_ADDED.value,
                 title=f"Task created: {instance.title}",
                 message=f"Task '{instance.title}' created with {instance.get_status_display()} status",
                 user=instance.created_by,
@@ -334,7 +335,7 @@ def task_created_or_updated_timeline_event(sender, instance, created, **kwargs):
                 if instance.status == IncidentTask.Status.COMPLETED and old_instance.status != IncidentTask.Status.COMPLETED:
                     TimelineEvent.objects.create(
                         incident=instance.incident,
-                        type=TimelineEvent.EventType.TASK_COMPLETED,
+                        type=TimelineEventTypeEnum.TASK_COMPLETED.value,
                         title=f"Task completed: {instance.title}",
                         message=f"Task '{instance.title}' marked as completed",
                         user=instance.assignee,  # Use assignee if available
@@ -350,7 +351,7 @@ def task_created_or_updated_timeline_event(sender, instance, created, **kwargs):
                 else:
                     TimelineEvent.objects.create(
                         incident=instance.incident,
-                        type=TimelineEvent.EventType.UPDATED,
+                        type=TimelineEventTypeEnum.UPDATED.value,
                         title=f"Task status changed: {instance.title}",
                         message=f"Task '{instance.title}' status changed from {old_instance.get_status_display()} to {instance.get_status_display()}",
                         company=instance.incident.company,
@@ -369,7 +370,7 @@ def task_created_or_updated_timeline_event(sender, instance, created, **kwargs):
                 
                 TimelineEvent.objects.create(
                     incident=instance.incident,
-                    type=TimelineEvent.EventType.ASSIGNED,
+                    type=TimelineEventTypeEnum.ASSIGNED.value,
                     title=f"Task assignee changed: {instance.title}",
                     message=f"Task '{instance.title}' assignee changed from {old_assignee} to {new_assignee}",
                     company=instance.incident.company,
@@ -388,7 +389,7 @@ def task_created_or_updated_timeline_event(sender, instance, created, **kwargs):
                 
                 TimelineEvent.objects.create(
                     incident=instance.incident,
-                    type=TimelineEvent.EventType.UPDATED,
+                    type=TimelineEventTypeEnum.UPDATED.value,
                     title=f"Task due date changed: {instance.title}",
                     message=f"Task '{instance.title}' due date updated",
                     company=instance.incident.company,
@@ -412,7 +413,7 @@ def task_deleted_timeline_event(sender, instance, **kwargs):
     try:
         TimelineEvent.objects.create(
             incident=instance.incident,
-            type=TimelineEvent.EventType.UPDATED,
+            type=TimelineEventTypeEnum.UPDATED.value,
             title=f"Task deleted: {instance.title}",
             message=f"Task '{instance.title}' was deleted from incident",
             company=instance.incident.company,
@@ -442,7 +443,7 @@ def alert_linked_timeline_event(sender, instance, action, pk_set, **kwargs):
             # Create a timeline event
             TimelineEvent.objects.create(
                 incident=instance,
-                type=TimelineEvent.EventType.ALERT_LINKED,
+                type=TimelineEventTypeEnum.ALERT_LINKED.value,
                 title=f"{count} alert{'s' if count > 1 else ''} linked to incident",
                 message=f"Alert{'s' if count > 1 else ''} with ID{'' if count == 1 else 's'} {', '.join(alert_ids)} linked to this incident",
                 company=instance.company,

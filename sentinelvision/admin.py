@@ -35,7 +35,7 @@ class FeedModuleAdminRegistry:
             list_display = ('name', 'module_type_display', 'company', 'is_active', 'last_run_display', 'total_iocs_display', 'feed_actions')
             list_filter = ('is_active', 'company')
             search_fields = ('name', 'description')
-            readonly_fields = ('last_run', 'last_error', 'error_count', 'total_processed', 'success_rate', 'total_iocs_imported')
+            readonly_fields = ('name', 'module_type', 'last_run', 'last_error', 'error_count', 'total_processed', 'success_rate', 'total_iocs_imported')
             fieldsets = (
                 (None, {
                     'fields': ('name', 'description', 'is_active', 'company')
@@ -47,6 +47,41 @@ class FeedModuleAdminRegistry:
                     'fields': ('last_run', 'last_error', 'error_count', 'total_processed', 'success_rate', 'total_iocs_imported')
                 }),
             )
+            
+            def has_add_permission(self, request):
+                """
+                Disable the ability to manually add feed modules.
+                Feed modules are automatically created based on the feeds directory.
+                """
+                return False
+                
+            def has_delete_permission(self, request, obj=None):
+                """
+                Disable the ability to delete feed modules.
+                Feed modules should only be managed programmatically.
+                """
+                return False
+                
+            def get_readonly_fields(self, request, obj=None):
+                """
+                Make the name and module_type fields read-only.
+                """
+                readonly = list(self.readonly_fields)
+                if obj:  # Editing an existing object
+                    readonly.extend(['name', 'module_type'])
+                return readonly
+                
+            def changelist_view(self, request, extra_context=None):
+                """
+                Add a message to the changelist view explaining how feeds work.
+                """
+                extra_context = extra_context or {}
+                extra_context['feeds_help_text'] = (
+                    "Feed modules are defined in the code and cannot be created through this interface. "
+                    "Available feeds are automatically discovered from the feeds directory. "
+                    "You can only modify the configuration of existing feeds."
+                )
+                return super().changelist_view(request, extra_context=extra_context)
             
             def module_type_display(self, obj):
                 """Get module type for display."""

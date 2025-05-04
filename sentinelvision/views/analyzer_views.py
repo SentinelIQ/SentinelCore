@@ -6,12 +6,9 @@ from sentinelvision.analyzers.virustotal import VirusTotalAnalyzer
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['SentinelVision Analyzers']),
-    retrieve=extend_schema(tags=['SentinelVision Analyzers']),
-    create=extend_schema(tags=['SentinelVision Analyzers']),
-    update=extend_schema(tags=['SentinelVision Analyzers']),
-    partial_update=extend_schema(tags=['SentinelVision Analyzers']),
-    destroy=extend_schema(tags=['SentinelVision Analyzers']),
+    list=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
+ extend_schema(tags=['Threat Intelligence (SentinelVision)'] Aextend_schema(tags=['Threat Intelligence (SentinelVision)']ntextend_schema(tags=['Threat Intelligence (SentinelVision)']ma(tags=['extend_schema(tags=['Threat Intelligence (SentinelVision)']=exextend_schema(tags=['Threat Intelligence (SentinelVision)']
+    destroy=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
 )
 class AnalyzerViewSet(StandardViewSet):
     """

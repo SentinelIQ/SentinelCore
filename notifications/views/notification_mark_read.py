@@ -15,7 +15,7 @@ class NotificationMarkReadView:
     permission_classes = [ViewOwnNotificationsPermission]
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Mark notification as read",
         description="Marks a notification as read for the current user by updating "
                     "the delivery status. Users can only mark their own notifications.",

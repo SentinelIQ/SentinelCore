@@ -5,12 +5,12 @@ from api.core.rbac import HasEntityPermission
 
 
 @extend_schema_view(
-    list=extend_schema(tags=['SentinelVision Feeds']),
-    retrieve=extend_schema(tags=['SentinelVision Feeds']),
-    create=extend_schema(tags=['SentinelVision Feeds']),
-    update=extend_schema(tags=['SentinelVision Feeds']),
-    partial_update=extend_schema(tags=['SentinelVision Feeds']),
-    destroy=extend_schema(tags=['SentinelVision Feeds']),
+    list=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
+    retrieve=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
+    create=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
+    update=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
+    partial_update=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
+    destroy=extend_schema(tags=['Threat Intelligence (SentinelVision)']),
 )
 class FeedViewSet(StandardViewSet):
     """

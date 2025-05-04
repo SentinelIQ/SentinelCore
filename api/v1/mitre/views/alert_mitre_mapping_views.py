@@ -14,37 +14,37 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
     list=extend_schema(
         summary="List Alert-MITRE Mappings",
         description="Returns a list of mappings between alerts and MITRE ATT&CK techniques.",
-        tags=["MITRE Mappings"]
+        tags=["MITRE Framework"]
     ),
     retrieve=extend_schema(
         summary="Retrieve Alert-MITRE Mapping",
         description="Returns details of a specific mapping between an alert and a MITRE ATT&CK technique.",
-        tags=["MITRE Mappings"]
+        tags=["MITRE Framework"]
     ),
     create=extend_schema(
         summary="Create Alert-MITRE Mapping",
         description="Maps an alert to a MITRE ATT&CK technique.",
-        tags=["MITRE Mappings"]
+        tags=["MITRE Framework"]
     ),
     update=extend_schema(
         summary="Update Alert-MITRE Mapping",
         description="Updates an existing mapping between an alert and a MITRE ATT&CK technique.",
-        tags=["MITRE Mappings"]
+        tags=["MITRE Framework"]
     ),
     partial_update=extend_schema(
         summary="Partially Update Alert-MITRE Mapping",
         description="Partially updates an existing mapping between an alert and a MITRE ATT&CK technique.",
-        tags=["MITRE Mappings"]
+        tags=["MITRE Framework"]
     ),
     destroy=extend_schema(
         summary="Delete Alert-MITRE Mapping",
         description="Removes a mapping between an alert and a MITRE ATT&CK technique.",
-        tags=["MITRE Mappings"]
+        tags=["MITRE Framework"]
     ),
     bulk_delete=extend_schema(
         summary="Bulk Delete Alert-MITRE Mappings",
         description="Removes all mappings for a specific alert.",
-        tags=["MITRE Mappings"]
+        tags=["MITRE Framework"]
     )
 )
 class AlertMitreMappingView(StandardViewSet):
@@ -116,7 +116,7 @@ class AlertMitreMappingView(StandardViewSet):
             },
             400: {"type": "object", "properties": {"status": {"type": "string"}, "message": {"type": "string"}}}
         },
-        tags=["MITRE Mappings"]
+        tags=["MITRE Framework"]
     )
     @action(detail=False, methods=['delete'])
     def bulk_delete(self, request):

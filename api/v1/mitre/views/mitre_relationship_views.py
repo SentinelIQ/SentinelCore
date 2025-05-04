@@ -12,12 +12,12 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
     list=extend_schema(
         summary="List MITRE ATT&CK Relationships",
         description="Returns a list of relationships between MITRE ATT&CK objects.",
-        tags=["MITRE ATT&CK"]
+        tags=["MITRE Framework"]
     ),
     retrieve=extend_schema(
         summary="Retrieve MITRE ATT&CK Relationship",
         description="Returns details of a specific relationship between MITRE ATT&CK objects.",
-        tags=["MITRE ATT&CK"]
+        tags=["MITRE Framework"]
     )
 )
 class MitreRelationshipView(ReadOnlyViewSet):

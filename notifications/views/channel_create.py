@@ -28,7 +28,7 @@ class NotificationChannelCreateView(CreateAPIView):
     serializer_class = NotificationChannelSerializer
     
     @extend_schema(
-        tags=['Notifications'],
+        tags=['Notification System'],
         summary="Create notification channel",
         description="Create a new notification channel for delivering notifications.",
         request=NotificationChannelSerializer,

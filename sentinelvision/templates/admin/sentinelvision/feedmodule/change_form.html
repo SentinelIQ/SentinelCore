@@ -1,0 +1,18 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls %}
+
+{% block object-tools %}
+<div class="messagelist">
+  <div class="info">
+    <p>
+      <strong>Nota importante:</strong> Os feeds são definidos no código-fonte e descobertos automaticamente ao iniciar o sistema.
+      Não é possível criar novos feeds através desta interface - apenas configurar os existentes.
+    </p>
+    <p>
+      Para adicionar um novo feed, você precisa criar uma classe de feed no diretório <code>sentinelvision/feeds/</code>
+      e reiniciar o aplicativo. Os feeds disponíveis são detectados automaticamente durante a inicialização.
+    </p>
+  </div>
+</div>
+{{ block.super }}
+{% endblock %} 

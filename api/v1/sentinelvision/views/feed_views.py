@@ -19,6 +19,7 @@ from api.v1.sentinelvision.serializers import (
 )
 from sentinelvision.tasks import run_feed_task
 
+@extend_schema(tags=['Threat Intelligence (SentinelVision)'])
 class FeedModuleViewSet(viewsets.ModelViewSet):
     """
     API endpoints for managing and executing feed modules.
@@ -49,7 +50,7 @@ class FeedModuleViewSet(viewsets.ModelViewSet):
         return FeedModuleSerializer
     
     @extend_schema(
-        tags=['sentinelvision', 'feeds'],
+        tags=['Threat Intelligence (SentinelVision)'],
         description='Run a feed module manually.',
         responses={
             200: OpenApiParameter(name='task_id', description='Celery task ID'),
@@ -93,7 +94,7 @@ class FeedModuleViewSet(viewsets.ModelViewSet):
         )
     
     @extend_schema(
-        tags=['sentinelvision', 'feeds'],
+        tags=['Threat Intelligence (SentinelVision)'],
         description='List execution history for a feed module.',
         responses={
             200: FeedExecutionRecordSerializer(many=True),

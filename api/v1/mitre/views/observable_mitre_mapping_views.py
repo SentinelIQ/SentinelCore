@@ -14,32 +14,32 @@ from drf_spectacular.utils import extend_schema, extend_schema_view
     list=extend_schema(
         summary="List Observable-MITRE Mappings",
         description="Returns a list of mappings between observables and MITRE ATT&CK techniques.",
-        tags=["MITRE Mappings"]
+        tags=["MITRE Framework"]
     ),
     retrieve=extend_schema(
         summary="Retrieve Observable-MITRE Mapping",
         description="Returns details of a specific mapping between an observable and a MITRE ATT&CK technique.",
-        tags=["MITRE Mappings"]
+        tags=["MITRE Framework"]
     ),
     create=extend_schema(
         summary="Create Observable-MITRE Mapping",
         description="Maps an observable to a MITRE ATT&CK technique.",
-        tags=["MITRE Mappings"]
+        tags=["MITRE Framework"]
     ),
     update=extend_schema(
         summary="Update Observable-MITRE Mapping",
         description="Updates an existing mapping between an observable and a MITRE ATT&CK technique.",
-        tags=["MITRE Mappings"]
+        tags=["MITRE Framework"]
     ),
     partial_update=extend_schema(
         summary="Partially Update Observable-MITRE Mapping",
         description="Partially updates an existing mapping between an observable and a MITRE ATT&CK technique.",
-        tags=["MITRE Mappings"]
+        tags=["MITRE Framework"]
     ),
     destroy=extend_schema(
         summary="Delete Observable-MITRE Mapping",
         description="Removes a mapping between an observable and a MITRE ATT&CK technique.",
-        tags=["MITRE Mappings"]
+        tags=["MITRE Framework"]
     )
 )
 class ObservableMitreMappingView(StandardViewSet):
@@ -106,7 +106,7 @@ class ObservableMitreMappingView(StandardViewSet):
             },
             400: {"type": "object", "properties": {"status": {"type": "string"}, "message": {"type": "string"}}}
         },
-        tags=["MITRE Mappings"]
+        tags=["MITRE Framework"]
     )
     @action(detail=False, methods=['delete'])
     def bulk_delete(self, request):
