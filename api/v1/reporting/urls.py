@@ -5,7 +5,7 @@ from api.v1.reporting.views.audit_report import AuditSummaryReportView, UserActi
 app_name = 'reporting'
 
 urlpatterns = [
-    path('', include('reporting.urls')),
+    path('', include('reporting.urls', namespace='reports')),
     # Audit reports
     path('audit/summary/', AuditSummaryReportView.as_view(), name='audit-summary-report'),
     path('audit/user-activity/', UserActivityReportView.as_view(), name='user-activity-report'),
