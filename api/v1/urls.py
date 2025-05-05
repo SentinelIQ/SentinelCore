@@ -42,6 +42,9 @@ urlpatterns = [
     # MITRE ATT&CK endpoints
     path('mitre/', include('api.v1.mitre.urls')),
     
+    # Audit logs endpoints
+    path('audit-logs/', include('api.v1.audit_logs.urls')),
+    
     # OpenAPI Documentation
     path('schema/', SpectacularAPIView.as_view(), name='schema'),
     path('docs/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),

@@ -46,7 +46,17 @@ def init_sentry_beat(**kwargs):
     # Initialize Sentry specifically for Beat
     sentry_sdk.init(
         dsn=dsn,
-        integrations=[CeleryIntegration(monitor_beat_tasks=True)],
+        integrations=[
+            CeleryIntegration(
+                monitor_beat_tasks=True,
+                exclude_beat_tasks=[
+                    "healthcheck",
+                    "cleanup_.*",
+                    "celery.backend_cleanup",
+                    "django_celery_beat.tasks.delete_expired_task_states",
+                ]
+            )
+        ],
         environment=environment,
         # Use the same release as the main application if available
         release=os.environ.get('SENTRY_RELEASE'),

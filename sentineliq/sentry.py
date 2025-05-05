@@ -6,6 +6,7 @@ This handles error reporting and performance monitoring for both Django and Cele
 import os
 import logging
 from django.conf import settings
+import django.db.models.signals
 
 import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
@@ -74,7 +75,17 @@ def setup_sentry():
     sentry_sdk.init(
         dsn=dsn,
         integrations=[
-            DjangoIntegration(),
+            DjangoIntegration(
+                transaction_style='url',
+                middleware_spans=True,
+                signals_spans=True,
+                signals_denylist=[
+                    django.db.models.signals.pre_init,
+                    django.db.models.signals.post_init,
+                ],
+                cache_spans=True,
+                http_methods_to_capture=("CONNECT", "DELETE", "GET", "PATCH", "POST", "PUT", "TRACE"),
+            ),
             CeleryIntegration(monitor_beat_tasks=True),
             RedisIntegration(),
             sentry_logging,

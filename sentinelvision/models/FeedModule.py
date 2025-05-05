@@ -27,7 +27,14 @@ class FeedModule(BaseModule):
         self.module_type = 'feed'
     
     def save(self, *args, **kwargs):
-        self.module_type = 'feed'
+        """
+        Ensure module_type is set to 'feed' before saving.
+        """
+        # Only set module_type if it's not already set or if it's different
+        if not self.module_type or self.module_type != 'feed':
+            self.module_type = 'feed'
+        
+        # Call parent save method
         super().save(*args, **kwargs)
     
     def execute(self, *args, **kwargs):

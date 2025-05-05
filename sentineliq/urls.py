@@ -18,12 +18,21 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.generic import RedirectView
 
+
+def trigger_error(request):
+    """Endpoint to test Sentry error reporting."""
+    division_by_zero = 1 / 0
+
+
 urlpatterns = [
     # Admin interface
     path('admin/', admin.site.urls),
     
     # API endpoints
     path('api/', include('api.urls')),
+    
+    # Sentry debug endpoint
+    path('sentry-debug/', trigger_error, name='sentry-debug'),
     
     # Redirecionar raiz para a documentação da API
     path('', RedirectView.as_view(url='/api/v1/docs/', permanent=False)),

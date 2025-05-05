@@ -38,7 +38,14 @@ class ResponderModule(BaseModule):
         self.module_type = 'responder'
     
     def save(self, *args, **kwargs):
-        self.module_type = 'responder'
+        """
+        Ensure module_type is set to 'responder' before saving.
+        """
+        # Only set module_type if it's not already set or if it's different
+        if not self.module_type or self.module_type != 'responder':
+            self.module_type = 'responder'
+        
+        # Call parent save method
         super().save(*args, **kwargs)
     
     def execute(self, incident, analysis_results, *args, **kwargs):

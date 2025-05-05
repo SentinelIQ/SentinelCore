@@ -53,6 +53,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'corsheaders',
     'django_celery_beat',
+    'auditlog',
     
     # Project apps
     'auth_app',
@@ -62,7 +63,6 @@ INSTALLED_APPS = [
     'incidents',
     'observables',
     'tasks',
-    'audit_logs',
     'reporting',
     'wiki',
     'notifications',
@@ -80,10 +80,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'api.core.middleware.RequestLoggingMiddleware',
-    'api.core.middleware.TenantContextMiddleware',
-    'api.core.middleware.SentryContextMiddleware',
-    'audit_logs.middleware.AuditLogMiddleware',
+    'api.core.middleware.audit_middleware.EnhancedAuditlogMiddleware',
+    'api.core.middleware.request_logging.RequestLoggingMiddleware',
+    'api.core.middleware.error_handling.ErrorHandlingMiddleware',
 ]
 
 ROOT_URLCONF = 'sentineliq.urls'
@@ -429,7 +428,7 @@ LOGGING = {
             'level': 'INFO',
             'propagate': False,
         },
-        'audit_logs': {
+        'auditlog': {
             'handlers': ['console', 'file_api'],
             'level': 'INFO',
             'propagate': False,

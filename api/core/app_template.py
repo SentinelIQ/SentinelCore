@@ -1,79 +1,119 @@
 """
-Template de código para tasks.py em novos apps Django
+Celery tasks implementation template.
 
-Este arquivo serve como um template para implementação de tarefas Celery
-em módulos Django seguindo os padrões da aplicação SentinelIQ.
-
-Copie e adapte esse código para novos apps.
+This file serves as a template for implementing Celery tasks
+in Django modules following the SentinelIQ application patterns.
 """
 
-import logging
-from celery import shared_task
+from celery import Task as CeleryTask
+from celery.utils.log import get_task_logger
+from api.core.audit import AuditLogTaskMixin
 from django.conf import settings
+import json
+import logging
 
-# Sempre use um logger específico para o app
-logger = logging.getLogger('nome_do_app.tasks')
+# Specific logger for tasks
+logger = get_task_logger(__name__)
 
 
-@shared_task(
-    # Sempre use um nome específico e consistente para a tarefa
-    name="nome_do_app.tasks.nome_da_tarefa",
-    # Vincule a tarefa para ter acesso a informações de contexto
-    bind=True,
-    # Configure retry automático para exceções específicas
-    autoretry_for=(Exception,),
-    # Configuração de retry: máximo de tentativas e tempo entre tentativas
-    retry_kwargs={'max_retries': 3, 'countdown': 60},
-    # Só confirma a tarefa após execução bem-sucedida
-    acks_late=True,
-    # Rastreia quando a tarefa começou (útil para monitoramento)
-    track_started=True,
-    # Rate limit opcional por tarefa
-    rate_limit='10/m'
-)
-def exemplo_tarefa(self, param1, param2=None):
+class BaseTask(AuditLogTaskMixin, CeleryTask):
     """
-    Exemplo de tarefa Celery com boas práticas.
+    Base class for all Celery tasks in the application.
+    
+    Implements common functionality like:
+    - Audit logging
+    - Error handling
+    - Task tracking
+    - Queue management
+    """
+    
+    # Default entity type for audit logging
+    entity_type = 'task'
+    
+    # Retry config: maximum attempts and time between retries
+    max_retries = 3
+    default_retry_delay = 60
+    
+    # Only confirm task after successful execution
+    acks_late = True
+    
+    def __call__(self, *args, **kwargs):
+        """
+        Run the task, capturing the company context if available.
+        """
+        try:
+            # Extract company ID from kwargs if available
+            company_id = kwargs.get('company_id')
+            if company_id:
+                # Add to context for audit logging
+                self.company_id = company_id
+                
+                # Get company name for more descriptive logs
+                from companies.models import Company
+                try:
+                    company = Company.objects.get(id=company_id)
+                    self.company_name = company.name
+                except Company.DoesNotExist:
+                    self.company_name = "Unknown"
+            
+            # Call parent implementation
+            return super().__call__(*args, **kwargs)
+            
+        except Exception as e:
+            logger.exception(f"Error in task {self.name}: {str(e)}")
+            raise
+    
+    def on_retry(self, exc, task_id, args, kwargs, einfo):
+        """Log retry attempts."""
+        logger.warning(
+            f"Retrying task {self.name} due to error: {str(exc)}. "
+            f"Attempt {self.request.retries + 1}/{self.max_retries}."
+        )
+        super().on_retry(exc, task_id, args, kwargs, einfo)
+    
+    def on_failure(self, exc, task_id, args, kwargs, einfo):
+        """Log task failures."""
+        logger.error(
+            f"Task {self.name} failed after {self.request.retries + 1} attempts. "
+            f"Error: {str(exc)}"
+        )
+        super().on_failure(exc, task_id, args, kwargs, einfo)
+    
+    def on_success(self, retval, task_id, args, kwargs):
+        """Log successful task completion."""
+        logger.info(f"Task {self.name} completed successfully.")
+        super().on_success(retval, task_id, args, kwargs)
+
+
+def handle_task_exception(task, exc, max_retries=3, should_retry=True):
+    """
+    Helper function to handle task exceptions consistently.
     
     Args:
-        self: Referência à tarefa (disponível por causa de bind=True)
-        param1: Parâmetro obrigatório
-        param2: Parâmetro opcional
+        task: The Celery task instance
+        exc: The exception that was raised
+        max_retries: Maximum number of retries
+        should_retry: Whether to retry the task
         
     Returns:
-        dict: Dicionário com resultados da tarefa
-        
-    Raises:
-        Exception: Se a tarefa falhar, permitindo retry automático
+        None. Either retries the task or raises the exception.
     """
-    # Sempre use logging detalhado em tarefas
-    task_id = self.request.id
-    logger.info(f"Iniciando tarefa {self.name} (ID: {task_id}) com parâmetros: param1={param1}, param2={param2}")
+    task_id = task.request.id
+    task_name = task.name
+    attempt = task.request.retries + 1
     
-    try:
-        # Implemente a lógica da tarefa aqui
-        resultado = f"Processado: {param1}"
-        
-        # Sempre registre o resultado
-        logger.info(f"Tarefa {task_id} concluída com sucesso: {resultado}")
-        
-        # Sempre retorne um dicionário com informações úteis
-        return {
-            "status": "success",
-            "task_id": task_id,
-            "result": resultado,
-            "params": {
-                "param1": param1,
-                "param2": param2
-            }
-        }
-        
-    except Exception as e:
-        # Capture e registre exceções, mas propague-as para permitir retry
-        logger.error(f"Erro na tarefa {task_id}: {str(e)}")
-        
-        # Se quiser tentar novamente com outros parâmetros em retry:
-        # raise self.retry(exc=e, countdown=60, kwargs={'param1': 'novo_valor'})
-        
-        # Ou simplesmente propague a exceção para usar o retry padrão
-        raise 
+    # Log the exception
+    logger.error(
+        f"Error in task {task_name} (id: {task_id}): {str(exc)}. "
+        f"Attempt {attempt}/{max_retries}."
+    )
+    
+    # If we should retry and haven't exceeded max retries
+    if should_retry and task.request.retries < max_retries:
+        # Retry with exponential backoff
+        retry_delay = 60 * (2 ** task.request.retries)  # 60s, 120s, 240s, etc.
+        logger.info(f"Retrying task {task_name} in {retry_delay} seconds.")
+        task.retry(exc=exc, countdown=retry_delay)
+    else:
+        # Or simply propagate the exception to use the default retry
+        raise exc 

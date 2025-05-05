@@ -12,6 +12,7 @@ from .user_create import UserCreateMixin
 from .user_detail import UserDetailMixin
 from .user_custom_actions import UserCustomActionsMixin
 from .token import CustomTokenObtainPairView, CustomTokenRefreshView, EmailPasswordTokenObtainView
+from .test_audit_log import test_audit_log  # Função atualizada para uso com django-auditlog
 
 User = get_user_model()
 

@@ -2,11 +2,13 @@ from rest_framework import status
 from rest_framework.decorators import action
 from api.core.responses import success_response, error_response
 from api.core.rbac import HasEntityPermission
+from api.core.audit import audit_action
 import logging
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
 from observables.services.elastic import ElasticLookupService
 from sentinelvision.tasks.enrichment_tasks import enrich_observable
-from audit_logs.models import AuditLog
+from auditlog.models import LogEntry
+from django.contrib.contenttypes.models import ContentType
 
 logger = logging.getLogger('api.observables')
 
@@ -73,6 +75,7 @@ class ObservableCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['post'], url_path='mark-as-ioc', permission_classes=[HasEntityPermission])
+    @audit_action(action_type='update', entity_type='observable')
     def mark_as_ioc(self, request, pk=None):
         """
         Mark an observable as an Indicator of Compromise (IOC).
@@ -162,6 +165,7 @@ class ObservableCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['post'], permission_classes=[HasEntityPermission])
+    @audit_action(action_type='update', entity_type='observable')
     def reprocess(self, request, pk=None):
         """
         Reprocess an observable through all compatible analyzers.
@@ -276,6 +280,7 @@ class ObservableCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['get'], permission_classes=[HasEntityPermission])
+    @audit_action(action_type='view', entity_type='observable')
     def history(self, request, pk=None):
         """
         Get history of changes for an observable.
@@ -285,10 +290,13 @@ class ObservableCustomActionsMixin:
         # Get execution records for this observable
         executions = observable.execution_records.all().order_by('-created_at')[:20]
         
-        # Get audit logs for this observable
-        audit_logs = AuditLog.objects.filter(
-            entity_type='observable',
-            entity_id=str(observable.id)
+        # Get content type for this observable model
+        content_type = ContentType.objects.get_for_model(observable)
+        
+        # Get audit logs for this observable using django-auditlog
+        audit_logs = LogEntry.objects.filter(
+            content_type=content_type,
+            object_pk=str(observable.id)
         ).order_by('-timestamp')[:20]
         
         # Combine history entries
@@ -309,8 +317,8 @@ class ObservableCustomActionsMixin:
             history.append({
                 'timestamp': log.timestamp,
                 'source': 'Audit Log',
-                'action': log.action,
-                'user': str(log.user) if log.user else None,
+                'action': log.get_action_display(),
+                'user': str(log.actor.pk) if log.actor else None,
                 'changes': log.changes
             })
         
@@ -565,60 +573,152 @@ class ObservableCustomActionsMixin:
         }
     )
     @action(detail=False, methods=['get'], permission_classes=[HasEntityPermission])
-    def search_elasticsearch(self, request):
+    @audit_action(action_type='view', entity_type='observable')
+    def search(self, request):
         """
-        Search for observables in Elasticsearch with tenant isolation.
-        
-        Query parameters:
-        - q: Search query string (required)
-        - type: Observable type filter (optional)
-        - is_ioc: Filter by IOC status (optional)
-        - limit: Maximum number of results (default: 50)
-        - days: How many days back to search (default: 90)
+        Search for observables using Elasticsearch.
         """
+        # Get query parameters
         query = request.query_params.get('q')
-        observable_type = request.query_params.get('type')
+        obs_type = request.query_params.get('type')
         is_ioc = request.query_params.get('is_ioc')
-        limit = int(request.query_params.get('limit', 50))
-        days = int(request.query_params.get('days', 90))
+        days = request.query_params.get('days', 90)
+        limit = request.query_params.get('limit', 50)
         
+        # Validate query parameter
         if not query:
             return error_response(
                 message="Search query parameter 'q' is required",
                 status_code=status.HTTP_400_BAD_REQUEST
             )
-        
-        # Initialize lookup service with company context
-        lookup_service = ElasticLookupService(company_id=request.user.company.id)
-        
-        # Prepare filters
-        filters = {}
-        if observable_type:
-            filters['type'] = observable_type
+            
+        # Parse boolean
         if is_ioc is not None:
-            filters['is_ioc'] = is_ioc.lower() == 'true'
-        
+            is_ioc = is_ioc.lower() == 'true'
+            
+        # Convert to int
         try:
-            # Execute search
-            results = lookup_service.search_observables(
-                query_string=query,
-                limit=limit,
-                days=days,
-                filters=filters
+            days = int(days)
+            limit = min(int(limit), 100)  # Cap at 100 results
+        except ValueError:
+            return error_response(
+                message="Parameters 'days' and 'limit' must be integers",
+                status_code=status.HTTP_400_BAD_REQUEST
             )
             
+        try:
+            # Get current company for tenant isolation
+            company_id = None
+            if not request.user.is_superuser and hasattr(request.user, 'company'):
+                company_id = str(request.user.company.id)
+                
+            # Perform search
+            service = ElasticLookupService()
+            results = service.search_observables(
+                query=query,
+                obs_type=obs_type,
+                is_ioc=is_ioc,
+                company_id=company_id,
+                days=days,
+                limit=limit
+            )
+            
+            # Return results
             return success_response(
-                data=results.get('results', []),
+                data=results['hits'],
+                message="Search results",
                 metadata={
-                    'total': results.get('total', 0),
+                    'total': results['total'],
                     'query': query,
-                    'filters': filters
+                    'filters': {
+                        'type': obs_type if obs_type else None,
+                        'is_ioc': is_ioc if is_ioc is not None else None,
+                        'days': days
+                    }
                 }
             )
-            
         except Exception as e:
             logger.error(f"Error searching Elasticsearch: {str(e)}")
             return error_response(
                 message=f"Error searching Elasticsearch: {str(e)}",
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    @extend_schema(
+        summary="Mark observable as false positive",
+        description=(
+            "Marks an observable as a false positive, which indicates it was incorrectly "
+            "identified as malicious or suspicious. This action helps improve the quality of "
+            "threat intelligence and prevents unnecessary alerts. False positives are tracked "
+            "for training and quality improvement purposes."
+        ),
+        responses={
+            200: OpenApiResponse(
+                description="Operation successful",
+                examples=[
+                    OpenApiExample(
+                        name="success_marked",
+                        summary="Successfully marked as false positive",
+                        description="The observable was successfully marked as a false positive",
+                        value={
+                            "status": "success",
+                            "message": "Observable successfully marked as a false positive",
+                            "data": {
+                                "observable_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                                "is_false_positive": True
+                            }
+                        }
+                    )
+                ]
+            ),
+            500: OpenApiResponse(
+                description="Server error",
+                examples=[
+                    OpenApiExample(
+                        name="server_error",
+                        summary="Internal server error",
+                        description="An error occurred while marking as false positive",
+                        value={
+                            "status": "error",
+                            "message": "Error marking observable as false positive: Database error",
+                            "code": 500
+                        }
+                    )
+                ]
+            )
+        }
+    )
+    @action(detail=True, methods=['post'], url_path='mark-as-false-positive', permission_classes=[HasEntityPermission])
+    @audit_action(action_type='update', entity_type='observable')
+    def mark_as_false_positive(self, request, pk=None):
+        """
+        Mark an observable as a false positive.
+        """
+        observable = self.get_object()
+        user = request.user
+        
+        try:
+            observable.is_false_positive = True
+            # If it was previously marked as an IOC, change that too
+            if observable.is_ioc:
+                observable.is_ioc = False
+                observable.save(update_fields=['is_false_positive', 'is_ioc', 'updated_at'])
+                logger.info(f"Observable {observable.id} unmarked as IOC and marked as false positive by {user.username}")
+            else:
+                observable.save(update_fields=['is_false_positive', 'updated_at'])
+                logger.info(f"Observable {observable.id} marked as false positive by {user.username}")
+            
+            return success_response(
+                data={
+                    "observable_id": observable.id,
+                    "is_false_positive": True,
+                    "is_ioc": observable.is_ioc
+                },
+                message="Observable successfully marked as a false positive"
+            )
+        except Exception as e:
+            logger.error(f"Error marking observable {observable.id} as false positive: {str(e)}")
+            return error_response(
+                message=f"Error marking observable as false positive: {str(e)}",
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR
             ) 

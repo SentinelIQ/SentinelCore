@@ -11,6 +11,7 @@ from ..permissions import CompanyPermission
 from api.core.pagination import StandardResultsSetPagination
 from api.core.throttling import AdminRateThrottle
 from api.core.viewsets import StandardViewSet
+from api.core.audit import AuditLogMixin
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter, OpenApiExample
 
 from .company_create import CompanyCreateMixin
@@ -62,6 +63,7 @@ from .company_custom_actions import CompanyCustomActionsMixin
 )
 @extend_schema(tags=['Company Management'])
 class CompanyViewSet(
+    AuditLogMixin,
     CompanyCreateMixin,
     CompanyDetailMixin,
     CompanyCustomActionsMixin,
@@ -125,6 +127,32 @@ class CompanyViewSet(
         
         # If no company, sees nothing
         return Company.objects.none()
+
+    def get_additional_log_data(self, request, obj=None, action=None):
+        """
+        Customize audit log data for companies.
+        
+        Add company-specific fields to the audit log.
+        
+        Args:
+            request: The HTTP request
+            obj: The company object being acted upon
+            action: The action being performed (create, update, delete)
+            
+        Returns:
+            dict: Additional data for the audit log
+        """
+        # Get standard log data from parent class
+        data = super().get_additional_log_data(request, obj, action)
+        
+        # Add company-specific data
+        if obj:
+            data.update({
+                'company_name': getattr(obj, 'name', None),
+                'user_count': obj.users.count() if hasattr(obj, 'users') else 0,
+            })
+            
+        return data
 
 
 __all__ = [

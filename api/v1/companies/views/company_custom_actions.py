@@ -3,6 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 from api.core.responses import success_response, error_response
+from api.core.audit import audit_action
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
 import logging
 from ..serializers.user_management import DeactivateUsersSerializer
@@ -81,7 +82,8 @@ class CompanyCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
-    def users(self, request, pk=None):
+    @audit_action(action_type='view', entity_type='company')
+    def list_users(self, request, pk=None):
         """
         Get all users for a specific company.
         
@@ -168,6 +170,7 @@ class CompanyCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    @audit_action(action_type='view', entity_type='company')
     def statistics(self, request, pk=None):
         """
         Get statistics for a specific company.
@@ -276,7 +279,8 @@ class CompanyCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['get'], url_path='user-stats')
-    def user_stats(self, request, pk=None):
+    @audit_action(action_type='view', entity_type='company')
+    def user_statistics(self, request, pk=None):
         """
         Get user statistics for a specific company.
         
@@ -320,15 +324,15 @@ class CompanyCustomActionsMixin:
         )
     
     @extend_schema(
-        summary="Deactivate multiple users",
+        summary="Deactivate users",
         description=(
-            "Deactivates multiple user accounts within a company simultaneously. This endpoint "
-            "is critical for security operations when off-boarding multiple employees or when "
-            "responding to potential account compromises. Company administrators and platform "
-            "superusers can use this feature to quickly revoke access for multiple users. "
-            "The operation preserves user data for audit purposes while preventing further "
-            "system access. Safety measures prevent company administrators from deactivating "
-            "other administrators, which requires superuser privileges."
+            "Deactivates multiple user accounts within a company. This endpoint allows administrators "
+            "to disable access for multiple users in a single operation, which is useful during "
+            "offboarding processes, security incidents, or account management activities. "
+            "The operation maintains tenant isolation, preventing cross-company account manipulation. "
+            "Role-based access controls ensure that only company administrators and platform superusers "
+            "can perform this sensitive action. Regular company administrators cannot deactivate "
+            "other administrators as a security safeguard."
         ),
         request=DeactivateUsersSerializer,
         responses={
@@ -337,30 +341,32 @@ class CompanyCustomActionsMixin:
                 examples=[
                     OpenApiExample(
                         name="deactivation_success",
-                        summary="Users deactivated",
-                        description="Example showing successful deactivation of users",
+                        summary="Successful deactivation",
+                        description="Example of successful user deactivation",
                         value={
                             "status": "success",
-                            "message": "3 users were successfully deactivated",
+                            "message": "5 users were successfully deactivated",
                             "data": {
-                                "deactivated_count": 3,
-                                "requested_count": 4
+                                "deactivated_count": 5,
+                                "requested_count": 6
                             }
                         }
                     )
                 ]
             ),
             400: OpenApiResponse(
-                description="Invalid request",
+                description="Invalid request data",
                 examples=[
                     OpenApiExample(
-                        name="empty_user_ids",
-                        summary="No user IDs provided",
-                        description="Example of response when no user IDs are provided",
+                        name="invalid_data",
+                        summary="Invalid request data",
+                        description="Example of response when the request data is invalid",
                         value={
                             "status": "error",
-                            "message": "You must provide at least one user ID",
-                            "code": "invalid_request"
+                            "message": "Invalid input data",
+                            "errors": {
+                                "user_ids": ["This field is required."]
+                            }
                         }
                     )
                 ]
@@ -383,6 +389,7 @@ class CompanyCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['post'], url_path='deactivate-users')
+    @audit_action(action_type='update', entity_type='company')
     def deactivate_users(self, request, pk=None):
         """
         Deactivate multiple users in a company.

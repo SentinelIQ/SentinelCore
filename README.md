@@ -245,4 +245,120 @@ python manage.py test tests
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details. 
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+# SentinelIQ Audit Logging System
+
+This document provides an overview of the centralized audit logging system implemented in SentinelIQ.
+
+## Overview
+
+The audit logging system captures and stores all critical operations performed in the SentinelIQ platform, including user actions, system operations, and background tasks. It provides a complete audit trail for compliance, security, and troubleshooting purposes.
+
+## Key Features
+
+- **Multi-tenant isolation**: All audit logs are isolated by company/tenant
+- **Comprehensive coverage**: Logs all CRUD operations and custom actions
+- **User tracking**: Records who performed each action
+- **Detailed metadata**: Captures timestamps, IP addresses, HTTP methods, etc.
+- **Background task logging**: Tracks Celery task execution
+- **Sensitive data handling**: Automatically sanitizes passwords and tokens
+- **Export capabilities**: Export logs to CSV, JSON, or Excel
+- **Filtering and search**: Advanced filtering by entity type, action, date range, etc.
+
+## Implementation Methods
+
+There are several ways to integrate audit logging in SentinelIQ:
+
+### 1. ViewSet Integration
+
+For Django REST Framework ViewSets, use the `AuditLogMixin`:
+
+```python
+from api.core.audit import AuditLogMixin
+
+class AlertViewSet(AuditLogMixin, viewsets.ModelViewSet):
+    """API endpoints for alerts."""
+    entity_type = 'alert'
+    # Other ViewSet configuration...
+```
+
+### 2. Custom Action Decorator
+
+For custom ViewSet actions, use the `@audit_action` decorator:
+
+```python
+from api.core.audit import audit_action
+
+@action(detail=True, methods=['post'])
+@audit_action(action='escalate', entity_type='alert')
+def escalate(self, request, pk=None):
+    # Implementation...
+```
+
+### 3. Model Signal Integration
+
+Model changes are automatically audited via Django signals. No additional code is required.
+
+### 4. Celery Task Integration
+
+For Celery tasks, use the `@audit_task` decorator or extend `AuditedTask`:
+
+```python
+from api.core.audit import audit_task
+
+@app.task
+@audit_task(entity_type='alert', get_entity_id=lambda alert_id, **kwargs: alert_id)
+def process_alert(alert_id, **kwargs):
+    # Task implementation...
+```
+
+### 5. Manual Logging
+
+For custom code or more granular control:
+
+```python
+from auditlog.models import LogEntry
+
+AuditLog.log_action(
+    user=request.user,
+    action='custom_action',
+    entity_type='custom_entity',
+    entity_id='123',
+    entity_name='Custom Entity Name',
+    request=request,
+    company=company
+)
+```
+
+## Accessing Audit Logs
+
+- **API**: `/api/v1/audit-logs/` endpoints
+- **Admin**: Django admin interface
+- **Export**: `/api/v1/audit-logs/export/` endpoint
+
+## Entity Types and Actions
+
+See `api.v1.audit_logs.enums` for the full list of supported entity types and actions.
+
+## Security Considerations
+
+- Audit logs respect multi-tenant isolation
+- Regular users can only see logs for their own company
+- Passwords, tokens, and other sensitive data are automatically sanitized
+
+## Best Practices
+
+1. Always set the correct `entity_type` in ViewSets
+2. Use explicit action names that describe what's happening
+3. For custom actions, use the `@audit_action` decorator
+4. Don't include sensitive data in log messages
+5. Consider audit log volume when designing operations that might generate many logs
+
+## Troubleshooting
+
+If audit logs are not being created:
+
+1. Check that the entity_type is set correctly
+2. Verify that the `audit_logs` app is in `INSTALLED_APPS`
+3. Check the Django logs for any errors in the audit logging process 

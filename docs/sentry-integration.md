@@ -98,9 +98,18 @@ def process_payment(payment_id):
 
 ## Testing the Integration
 
-### Test Endpoint
+### Basic Test Endpoint
 
-An endpoint to test the integration is available at `/api/v1/common/test-sentry/`. This endpoint requires authentication and admin permissions.
+A simple endpoint to test Sentry error reporting is available at `/sentry-debug/`. This endpoint is publicly accessible and will generate a division by zero error to test the error reporting pipeline:
+
+```python
+# Access this endpoint in a browser to trigger an error report in Sentry
+# URL: /sentry-debug/
+```
+
+### Advanced Test Endpoint
+
+A more advanced endpoint to test the integration is available at `/api/v1/common/test-sentry/`. This endpoint requires authentication and admin permissions.
 
 #### Parameters
 

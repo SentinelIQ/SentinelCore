@@ -3,6 +3,7 @@ from .observable_create import ObservableCreateViewMixin
 from .observable_custom_actions import ObservableCustomActionsMixin
 from rest_framework import viewsets
 from api.core.viewsets import StandardViewSet
+from api.core.audit import AuditLogMixin
 from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse, OpenApiExample
 from rest_framework import filters, status
 from django_filters.rest_framework import DjangoFilterBackend
@@ -207,6 +208,7 @@ logger = logging.getLogger('api.observables')
 )
 @extend_schema(tags=['Observables & IOCs'])
 class ObservableViewSet(
+    AuditLogMixin,
     ObservableDetailViewMixin,
     ObservableCreateViewMixin,
     ObservableCustomActionsMixin,
@@ -227,12 +229,42 @@ class ObservableViewSet(
     ordering_fields = ['created_at', 'updated_at', 'type', 'is_ioc']
     ordering = ['-created_at']
     filterset_class = ObservableFilter
-    entity_type = 'observable'  # Define entity type for RBAC
+    entity_type = 'observable'  # Define entity type for RBAC and audit logging
     
     # Success messages for standardized responses
     success_message_create = "Observable created successfully"
     success_message_update = "Observable updated successfully"
     success_message_delete = "Observable deleted successfully"
+    
+    def get_additional_log_data(self, request, obj=None, action=None):
+        """
+        Customize audit log data for observables.
+        
+        Add observable-specific fields to the audit log, such as type,
+        value, and whether it's an IoC.
+        
+        Args:
+            request: The HTTP request
+            obj: The observable object being acted upon
+            action: The action being performed (create, update, delete)
+            
+        Returns:
+            dict: Additional data for the audit log
+        """
+        # Get standard log data from parent class
+        data = super().get_additional_log_data(request, obj, action)
+        
+        # Add observable-specific data
+        if obj:
+            data.update({
+                'observable_type': getattr(obj, 'type', None),
+                'observable_value': getattr(obj, 'value', None),
+                'is_ioc': getattr(obj, 'is_ioc', False),
+                'company_id': str(obj.company.id) if getattr(obj, 'company', None) else None,
+                'company_name': obj.company.name if getattr(obj, 'company', None) else None,
+            })
+            
+        return data
     
     def get_queryset(self):
         """

@@ -12,6 +12,7 @@ from ..permissions import IncidentPermission
 from api.core.pagination import StandardResultsSetPagination
 from api.core.throttling import AdminRateThrottle, StandardUserRateThrottle
 from api.core.viewsets import StandardViewSet
+from api.core.audit import AuditLogMixin
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
 
 from .incident_create import IncidentCreateMixin
@@ -20,7 +21,7 @@ from .incident_custom_actions import IncidentCustomActionsMixin
 
 
 @extend_schema(tags=['Incident Management'])
-class IncidentViewSet(IncidentCreateMixin, IncidentDetailMixin, IncidentCustomActionsMixin, StandardViewSet):
+class IncidentViewSet(AuditLogMixin, IncidentCreateMixin, IncidentDetailMixin, IncidentCustomActionsMixin, StandardViewSet):
     """
     API endpoint for incident management.
     
@@ -35,12 +36,42 @@ class IncidentViewSet(IncidentCreateMixin, IncidentDetailMixin, IncidentCustomAc
     search_fields = ['title', 'description', 'summary']
     ordering_fields = ['created_at', 'updated_at', 'severity', 'status', 'impact_score']
     ordering = ['-created_at']
-    entity_type = 'incident'  # Define entity type for RBAC
+    entity_type = 'incident'  # Define entity type for RBAC and audit logging
     
     # Success messages for standardized responses
     success_message_create = "Incident created successfully"
     success_message_update = "Incident updated successfully"
     success_message_delete = "Incident deleted successfully"
+    
+    def get_additional_log_data(self, request, obj=None, action=None):
+        """
+        Customize audit log data for incidents.
+        
+        Add incident-specific fields to the audit log, such as severity,
+        status, and company information.
+        
+        Args:
+            request: The HTTP request
+            obj: The incident object being acted upon
+            action: The action being performed (create, update, delete)
+            
+        Returns:
+            dict: Additional data for the audit log
+        """
+        # Get standard log data from parent class
+        data = super().get_additional_log_data(request, obj, action)
+        
+        # Add incident-specific data
+        if obj:
+            data.update({
+                'incident_severity': getattr(obj, 'severity', None),
+                'incident_status': getattr(obj, 'status', None),
+                'incident_title': getattr(obj, 'title', None),
+                'company_id': str(obj.company.id) if getattr(obj, 'company', None) else None,
+                'company_name': obj.company.name if getattr(obj, 'company', None) else None,
+            })
+            
+        return data
     
     @extend_schema(
         summary="List all incidents with filtering and pagination",

@@ -1,5 +1,5 @@
 """
-Utility modules for the API core functionality.
+Utilitários diversos para o projeto SentinelIQ.
 """
 
 from api.core.utils.enum_utils import enum_to_choices, enum_values

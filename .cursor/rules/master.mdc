@@ -3,10 +3,12 @@ description:
 globs: 
 alwaysApply: true
 ---
+
 # 🤖 AI-Executable Project Standards for Django REST Framework (DRF) – Enterprise-grade
 
 > ⚠️ **IMPORTANT:** Every implementation MUST comply with **ALL the following rules**. No partial compliance is accepted. All code must reflect these standards from the first commit and throughout the lifecycle of the application.
 
+---
 
 ## ✅ Project Implementation Status Tracker
 
@@ -19,6 +21,7 @@ alwaysApply: true
 - [ ] Logging configured with separate log files
 - [ ] All apps created using `startapp` command
 - [ ] No placeholders or TODOs in committed code
+- [ ] All apps implement centralized Audit Logs (`audit_logs`)
 
 ### ✅ Completed Tasks
 - [x] Poetry used for dependency management
@@ -27,9 +30,18 @@ alwaysApply: true
 - [x] Core API response handler implemented in `api.core.responses`
 - [x] RBAC enforced in `api.core.rbac`
 
+---
 
+## 📋 Audit Logging Requirements
 
-You are an expert automation agent assigned to maintain and enforce Django REST Framework (DRF) enterprise standards. You MUST follow the strict modularization, dependency, testing, logging, and naming conventions as described below.
+- ✅ Every Django app MUST be integrated with the centralized `audit_logs` app.
+- ✅ All key user and system actions must be logged (CRUD operations, logins, task executions, updates).
+- ✅ Use DRF ViewSet hooks or Django signals to trigger logs (`perform_create`, `perform_update`, `post_save`, etc.).
+- ✅ Use consistent schema: actor, action, object, timestamp, tenant, request_data, IP, user_agent.
+- ✅ Celery/system tasks must log under `"system"` or designated actor.
+- ✅ No app is permitted in production without complete audit log coverage.
+
+Refer to the `audit_logs` module documentation for usage examples and API support.
 
 ---
 
@@ -187,6 +199,7 @@ poetry install
 | API response format comes from `api.core`                   | ✅         |
 | RBAC is implemented on all routes                           | ✅         |
 | No `venv` or `.venv` folders in the project                 | ✅         |
+| Centralized Audit Logs implemented for all apps             | ✅         |
 
 ---
 
@@ -209,18 +222,6 @@ docker compose exec web python manage.py <command>
 
 ---
 
-## 📌 Result
-
-Following this guide, the Django DRF project becomes:
-
-- ✅ Enterprise-compliant
-- ✅ Modular and maintainable
-- ✅ Ready for automated deployments and code audits
-- ✅ Easy to onboard new developers or scale teams
-
----
-
-
 ## 🛠️ Django Admin Registration
 
 - ✅ Every Django app must register its models in the Django Admin interface (`admin.py`) with meaningful display configurations.
@@ -230,50 +231,7 @@ Following this guide, the Django DRF project becomes:
 - ✅ When upgrading or refactoring an app, the `admin.py` file MUST be reviewed and updated to match the current model structure and use modern admin features.
 - ❌ Maintaining compatibility with outdated admin configurations is NOT allowed. All configurations must reflect the latest structure and standards of the app.
 
-API Development Rules for AI Systems Building Enterprise Django REST APIs
-Document All API Elements Explicitly
-Always annotate endpoints with @extend_schema including tags, descriptions, and responses
-Never rely on automatic schema generation for complex components
-Define explicit response examples for both success and error cases
-Handle Enum Fields Uniquely
-Implement a custom enum resolver that uses app/model prefixes for common fields
-Never use the same enum name across different contexts (status, type, priority, etc.)
-Set ENUM_NAME_HANDLING: 'do_not_format' and use a custom resolver function
-Type Every Serializer Method
-Annotate all SerializerMethodField with @extend_schema_field(ReturnType())
-Include allow_null=True for fields that may return None
-Be explicit about return types (BooleanField, IntegerField, CharField, etc.)
-Use Proper Response Components
-Use OpenApiResponse with response type and examples
-Avoid direct StandardResponse references in schema declarations
-Provide multiple realistic examples for request/response pairs
-Define Path Parameters Correctly
-Declare path parameters with OpenApiParameter(location=OpenApiParameter.PATH)
-Specify exact type information for every parameter
-Mark required parameters appropriately
-Structure Schemas Systematically
-Enable component splitting with COMPONENT_SPLIT_REQUEST: True
-Use REUSE_SCHEMA_DEFINITIONS: True for component reuse
-Configure systematic tagging to group related endpoints
-Implement Consistent Response Formats
-Define a central response format handler (like success_response)
-Document response structure in schema examples that match actual returns
-Include pagination metadata consistently in list responses
-Validate Schema During Development
-Run schema validation checks before committing code
-Test schema endpoints with automated tools
-Fix enum conflicts immediately during development
-Maintain Tag Consistency
-Use predefined tags from settings rather than ad-hoc tagging
-Group related functionality under consistent tag names
-Document tag meanings in OpenAPI schema configuration
-Handle Serializer Context Properly
-Pass request context to nested serializers
-Consider context in serializer method fields
-Document context dependencies in code comments
-
-
-
+---
 
 ## 🧱 Django App Creation Standard
 
@@ -287,12 +245,3 @@ Document context dependencies in code comments
 - ✅ Models MUST be registered in `admin.py` and exposed via Django Admin.
 - ✅ Apps like `alerts`, `incidents`, `companies`, and `tasks` in this project follow this pattern and serve as valid references.
 - ❌ Do not bypass Django’s app registration or structure. All applications MUST be fully integrated into `INSTALLED_APPS` and follow DRY and SRP principles.
-
-
-- ✅ Every Django app MUST be created using the official Django management command:
-  ```bash
-  docker compose exec web python manage.py startapp <app_name>
-  ```
-- ❌ Manual creation of apps, custom folder structures, or bypassing Django’s default conventions is strictly prohibited.
-- ✅ The generated app structure MUST be preserved and extended properly using Django’s modular architecture.
-- ✅ This ensures compatibility with Django Admin, migrations, and app registry. Any deviation breaks enterprise maintainability.

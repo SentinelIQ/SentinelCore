@@ -8,6 +8,7 @@ from incidents.models import Incident, TimelineEvent, IncidentObservable, Incide
 from alerts.models import Alert
 from api.core.responses import success_response, error_response
 from api.core.rbac import HasEntityPermission
+from api.core.audit import audit_action
 from ..serializers import (
     IncidentTimelineEntrySerializer, 
     IncidentAssignSerializer, 
@@ -40,6 +41,7 @@ class IncidentCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['post'], url_path='close', permission_classes=[HasEntityPermission])
+    @audit_action(action_type='update', entity_type='incident')
     def close_incident(self, request, pk=None):
         """
         Closes an incident and updates related alerts status.
@@ -206,6 +208,7 @@ class IncidentCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['post'], url_path='add-timeline-entry', permission_classes=[HasEntityPermission])
+    @audit_action(action_type='update', entity_type='incident')
     def add_timeline_entry(self, request, pk=None):
         """
         Add a timeline entry to an incident.
@@ -273,6 +276,7 @@ class IncidentCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['post'], url_path='assign', permission_classes=[HasEntityPermission])
+    @audit_action(action_type='update', entity_type='incident')
     def assign_incident(self, request, pk=None):
         """
         Assign an incident to a user.
@@ -386,6 +390,7 @@ class IncidentCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['get'], url_path='timeline', permission_classes=[HasEntityPermission])
+    @audit_action(action_type='read', entity_type='incident')
     def get_timeline(self, request, pk=None):
         """
         Get the timeline for an incident.
@@ -412,6 +417,7 @@ class IncidentCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['get'], url_path='observables')
+    @audit_action(action_type='read', entity_type='incident')
     def list_observables(self, request, pk=None):
         """
         List all observables associated with this incident.
@@ -436,6 +442,7 @@ class IncidentCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['post'], url_path='add-observable')
+    @audit_action(action_type='create', entity_type='incident_observable')
     def add_observable(self, request, pk=None):
         """
         Add an observable to this incident.
@@ -522,6 +529,7 @@ class IncidentCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['delete'], url_path='remove-observable/(?P<observable_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})')
+    @audit_action(action_type='delete', entity_type='incident_observable')
     def remove_observable(self, request, pk=None, observable_id=None):
         """
         Remove an observable from this incident.
@@ -574,6 +582,7 @@ class IncidentCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['get'], url_path='tasks')
+    @audit_action(action_type='read', entity_type='incident')
     def list_tasks(self, request, pk=None):
         """
         List all tasks associated with this incident.
@@ -703,6 +712,7 @@ class IncidentCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['post'], url_path='add-task')
+    @audit_action(action_type='create', entity_type='incident_task')
     def add_task(self, request, pk=None):
         """
         Add a task to this incident.
@@ -769,6 +779,7 @@ class IncidentCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['patch'], url_path='update-task/(?P<task_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})')
+    @audit_action(action_type='update', entity_type='incident_task')
     def update_task(self, request, pk=None, task_id=None):
         """
         Update a task in this incident.
@@ -848,6 +859,7 @@ class IncidentCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['delete'], url_path='delete-task/(?P<task_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})')
+    @audit_action(action_type='delete', entity_type='incident_task')
     def delete_task(self, request, pk=None, task_id=None):
         """
         Delete a task from this incident.
@@ -894,6 +906,7 @@ class IncidentCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['post'], url_path='run-responder')
+    @audit_action(action_type='update', entity_type='incident')
     def run_responder(self, request, pk=None):
         """
         Trigger a SentinelVision responder for this incident.
@@ -1052,6 +1065,7 @@ class IncidentCustomActionsMixin:
         }
     )
     @action(detail=True, methods=['post'], url_path='generate-report')
+    @audit_action(action_type='create', entity_type='incident_report')
     def generate_report(self, request, pk=None):
         """
         Generate a report for this incident.
