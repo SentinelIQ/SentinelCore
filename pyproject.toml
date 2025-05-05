@@ -32,6 +32,7 @@ idna = "^3.10"
 elasticsearch-dsl = "^8.18.0"
 django-auditlog = "^3.1.2"
 openpyxl = "^3.1.5"
+pymisp = "^2.5.10"
 
 [tool.poetry.group.dev.dependencies]
 black = ">=24.2.0"

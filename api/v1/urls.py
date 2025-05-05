@@ -44,6 +44,9 @@ urlpatterns = [
     # MITRE ATT&CK endpoints
     path('mitre/', include('api.v1.mitre.urls', namespace='mitre')),
     
+    # MISP Sync endpoints
+    path('misp-sync/', include('api.v1.misp_sync.urls', namespace='misp_sync')),
+    
     # Audit logs endpoints
     path('audit-logs/', include('api.v1.audit_logs.urls', namespace='audit_logs')),
     

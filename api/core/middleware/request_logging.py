@@ -29,6 +29,15 @@ class RequestLoggingMiddleware(MiddlewareMixin):
     def process_request(self, request):
         """Process request and store start time."""
         request.start_time = time.time()
+        
+        # Cache the request body for later use if it's a JSON request
+        if request.method not in ('GET', 'HEAD', 'OPTIONS'):
+            if request.content_type and 'application/json' in request.content_type:
+                try:
+                    # Cache the request body
+                    request._cached_body = request.body.decode('utf-8')
+                except Exception:
+                    request._cached_body = None
     
     def process_response(self, request, response):
         """Process response and log request information."""
@@ -62,8 +71,8 @@ class RequestLoggingMiddleware(MiddlewareMixin):
         if request.method not in ('GET', 'HEAD', 'OPTIONS'):
             try:
                 if request.content_type and 'application/json' in request.content_type:
-                    if hasattr(request, 'body') and request.body:
-                        body_data = json.loads(request.body.decode('utf-8'))
+                    if hasattr(request, '_cached_body') and request._cached_body:
+                        body_data = json.loads(request._cached_body)
                         # Sanitize sensitive data
                         sanitized_data = self._sanitize_data(body_data)
                         log_data['body'] = sanitized_data

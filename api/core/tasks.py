@@ -13,9 +13,89 @@ from celery import shared_task
 from celery.utils.log import get_task_logger
 from typing import Dict, Any, Optional
 from django.conf import settings
+from functools import wraps
 
 # Use the Celery-specific task logger
 logger = get_task_logger(__name__)
+
+def audit_task(entity_type, action):
+    """
+    Decorator for Celery tasks that should be audited.
+    
+    This decorator wraps Celery tasks and logs their execution to the audit log.
+    
+    Args:
+        entity_type: The type of entity being operated on
+        action: The action being performed
+        
+    Returns:
+        The decorated task function
+    """
+    def decorator(task_func):
+        @wraps(task_func)
+        def wrapper(*args, **kwargs):
+            # Log task start to audit log
+            try:
+                logger.info(f"Starting {action} on {entity_type}: args={args}, kwargs={kwargs}")
+                
+                # Execute the task
+                result = task_func(*args, **kwargs)
+                
+                # Log task completion
+                logger.info(f"Completed {action} on {entity_type}: {result}")
+                
+                # Record in audit logs if available
+                try:
+                    from api.v1.audit_logs.models import AuditLog
+                    
+                    # Create audit log entry
+                    AuditLog.objects.create(
+                        entity_type=entity_type,
+                        action=action,
+                        actor="system",
+                        data={
+                            "task_args": args,
+                            "task_kwargs": kwargs,
+                            "result": result
+                        }
+                    )
+                except ImportError:
+                    logger.debug("AuditLog model not available, skipping audit log creation")
+                except Exception as audit_error:
+                    logger.error(f"Failed to create audit log: {str(audit_error)}")
+                
+                return result
+            except Exception as e:
+                # Log the error
+                logger.error(f"Error in {action} on {entity_type}: {str(e)}")
+                
+                # Record error in audit logs if available
+                try:
+                    from api.v1.audit_logs.models import AuditLog
+                    
+                    # Create audit log entry for error
+                    AuditLog.objects.create(
+                        entity_type=entity_type,
+                        action=action,
+                        actor="system",
+                        data={
+                            "task_args": args,
+                            "task_kwargs": kwargs,
+                            "error": str(e)
+                        },
+                        status="error"
+                    )
+                except ImportError:
+                    logger.debug("AuditLog model not available, skipping audit log creation")
+                except Exception as audit_error:
+                    logger.error(f"Failed to create audit log: {str(audit_error)}")
+                
+                # Re-raise the original exception
+                raise
+        
+        return wrapper
+    
+    return decorator
 
 @shared_task(
     name="api.core.tasks.run_migrations",
