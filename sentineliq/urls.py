@@ -29,11 +29,11 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     
     # API endpoints
-    path('api/', include('api.urls')),
+    path('api/', include('api.urls', namespace='api')),
     
     # Sentry debug endpoint
     path('sentry-debug/', trigger_error, name='sentry-debug'),
     
-    # Redirecionar raiz para a documentação da API
+    # Redirect root to API documentation
     path('', RedirectView.as_view(url='/api/v1/docs/', permanent=False)),
 ]
