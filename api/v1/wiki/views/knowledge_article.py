@@ -265,6 +265,7 @@ class KnowledgeArticleFilterSet(FilterSet):
         }
     )
 )
+@extend_schema(tags=['Knowledge Base (Wiki)'])
 class KnowledgeArticleViewSet(StandardViewSet):
     """
     ViewSet for Knowledge Articles that represent the internal wiki.

@@ -39,6 +39,12 @@ isort = ">=5.13.2"
 flake8 = ">=7.0.0"
 pytest = ">=8.0.0"
 pytest-django = ">=4.7.0"
+mkdocs = "^1.6.1"
+mkdocs-material = "^9.6.12"
+mkdocs-awesome-pages-plugin = "^2.10.1"
+mkdocstrings = {extras = ["python"], version = "^0.29.1"}
+pymdown-extensions = "^10.15"
+mkdocs-minify-plugin = "^0.8.0"
 
 [build-system]
 requires = ["poetry-core"]

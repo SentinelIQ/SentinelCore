@@ -21,6 +21,7 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
 
+
   db:
     image: postgres:15
     volumes:
@@ -421,6 +422,22 @@ services:
       timeout: 10s
       retries: 3
     restart: on-failure
+
+  sentineliq-docs:
+    build:
+      context: .
+      dockerfile: Dockerfile.docs
+    ports:
+      - "3001:3000"
+    volumes:
+      - ./docs:/app
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   postgres_data:

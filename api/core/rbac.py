@@ -43,8 +43,9 @@ class HasEntityPermission(permissions.BasePermission):
         elif not entity_type and hasattr(view, 'get_queryset'):
             try:
                 entity_type = view.get_queryset().model.__name__.lower()
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Failed to determine entity_type from get_queryset: {str(e)}")
+                entity_type = None
                 
         if not entity_type:
             # Default to the most restrictive permission check if entity_type cannot be determined

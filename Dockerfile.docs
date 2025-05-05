@@ -1,0 +1,19 @@
+FROM node:20-slim
+
+# Configurar diretório de trabalho
+WORKDIR /app
+
+# Copiar arquivos de configuração
+COPY docs/package.json docs/package-lock.json ./
+
+# Instalar dependências
+RUN npm ci
+
+# Copiar o restante dos arquivos do projeto
+COPY docs/ ./
+
+# Expor a porta para o servidor de desenvolvimento
+EXPOSE 3000
+
+# Comando padrão para iniciar Docusaurus em modo de desenvolvimento
+CMD ["npm", "start", "--", "--host", "0.0.0.0"] 

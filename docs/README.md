@@ -1,64 +1,41 @@
-# SentinelIQ API Documentation
+# Website
 
-## Overview
+This website is built using [Docusaurus](https://docusaurus.io/), a modern static website generator.
 
-This documentation provides comprehensive guidelines and references for developing enterprise-grade API endpoints using the SentinelIQ platform's core architecture. All implementations must follow these standards to ensure consistency, security, and maintainability.
+### Installation
 
-## Table of Contents
+```
+$ yarn
+```
 
-### Architecture and Core Components
+### Local Development
 
-- [API Core Architecture](./api_core_architecture.md) - Overview of the core components and architecture
-- [Audit System](./audit_system.md) - Comprehensive auditing implementation
-- [RBAC System](./rbac_system.md) - Role-based access control system
-- [Sentry Integration](./sentry-integration.md) - Security monitoring and error tracking
+```
+$ yarn start
+```
 
-### Standards and Requirements
+This command starts a local development server and opens up a browser window. Most changes are reflected live without having to restart the server.
 
-- [Compliance Requirements](./compliance.md) - Security and regulatory compliance
-- [API Tag Structure](./api_tag_structure.md) - OpenAPI documentation standards
-- [Celery Configuration](./celery-config.md) - Background task configuration
+### Build
 
-### Developer Resources
+```
+$ yarn build
+```
 
-- [API Developer Cheat Sheet](./api_developer_cheatsheet.md) - Quick reference for developers
+This command generates static content into the `build` directory and can be served using any static contents hosting service.
 
-## Implementation Standards Checklist
+### Deployment
 
-All implementations MUST adhere to the following principles:
+Using SSH:
 
-- ✅ Modular view structure in separate files
-- ✅ RBAC enforced on all routes via `api.core.rbac`
-- ✅ Standardized API responses from `api.core.responses`
-- ✅ Comprehensive audit logging using `api.core.audit`
-- ✅ All models registered in Django Admin
-- ✅ All API endpoints documented using `@extend_schema`
-- ✅ Testing centralized in `/tests/`
-- ✅ Tenant isolation enforced on all queries
-- ✅ Poetry used for dependency management
-- ✅ All commands run inside Docker
-- ✅ URLs following kebab-case convention
-- ✅ English used for all code and documentation
+```
+$ USE_SSH=true yarn deploy
+```
 
-## Getting Started
+Not using SSH:
 
-New developers should begin by reading the [API Core Architecture](./api_core_architecture.md) document, followed by the [API Developer Cheat Sheet](./api_developer_cheatsheet.md) for a quick reference to common patterns and implementations.
+```
+$ GIT_USER=<Your GitHub username> yarn deploy
+```
 
-## Command Reference
-
-All commands must be run inside Docker containers:
-
-```bash
-# Start the environment
-docker compose up -d
-
-# Run Django commands
-docker compose exec web python manage.py migrate
-docker compose exec web python manage.py createsuperuser
-
-# Add dependencies
-docker compose exec web poetry add package_name
-
-# Run tests
-docker compose exec web python manage.py test tests
-``` 
+If you are using GitHub pages for hosting, this command is a convenient way to build the website and push to the `gh-pages` branch.

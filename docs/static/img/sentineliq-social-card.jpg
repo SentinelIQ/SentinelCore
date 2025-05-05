@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="630" viewBox="0 0 1200 630" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#121212" />
+      <stop offset="100%" stop-color="#2a2a2a" />
+    </linearGradient>
+    <linearGradient id="accentGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#6200ee" />
+      <stop offset="100%" stop-color="#9966ff" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bgGradient)" />
+  
+  <!-- Logo -->
+  <g transform="translate(150, 215)">
+    <rect x="0" y="0" width="200" height="200" rx="40" fill="#121212" />
+    <path d="M50 50 L150 50 L150 150 L50 150 Z" fill="none" stroke="url(#accentGradient)" stroke-width="10" />
+    <path d="M75 75 L125 75 L125 125 L75 125 Z" fill="url(#accentGradient)" />
+    <circle cx="100" cy="100" r="7.5" fill="#ffffff" />
+  </g>
+  
+  <!-- Text -->
+  <text x="400" y="250" font-family="Arial, sans-serif" font-size="80" font-weight="bold" fill="#ffffff">SentinelIQ</text>
+  <text x="400" y="330" font-family="Arial, sans-serif" font-size="40" fill="#9966ff">Enterprise-grade Security Platform</text>
+</svg> 

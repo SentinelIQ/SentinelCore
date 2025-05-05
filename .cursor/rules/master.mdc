@@ -3,6 +3,8 @@ description:
 globs: 
 alwaysApply: true
 ---
+# 🛡️ SentinelIQ – Enterprise-grade API Implementation Guide for Django REST Framework
+
 
 # 🤖 AI-Executable Project Standards for Django REST Framework (DRF) – Enterprise-grade
 
@@ -29,6 +31,16 @@ alwaysApply: true
 - [x] Modular view structure in place
 - [x] Core API response handler implemented in `api.core.responses`
 - [x] RBAC enforced in `api.core.rbac`
+
+---
+
+## 🚫 Development Automation Rule (AI-Only)
+
+- ✅ All development work MUST be executed by AI automation agents with **zero manual script creation**.
+- ❌ Developers are NOT allowed to manually create views, models, serializers, or other application code.
+- ✅ Developers may only supervise, define requirements, or update **status checklists**.
+- ✅ Any implementation that bypasses AI-driven execution is considered invalid and must be reverted.
+- ✅ The goal is **end-to-end AI-managed development**, ensuring precision, consistency, and full traceability.
 
 ---
 
@@ -245,3 +257,154 @@ docker compose exec web python manage.py <command>
 - ✅ Models MUST be registered in `admin.py` and exposed via Django Admin.
 - ✅ Apps like `alerts`, `incidents`, `companies`, and `tasks` in this project follow this pattern and serve as valid references.
 - ❌ Do not bypass Django’s app registration or structure. All applications MUST be fully integrated into `INSTALLED_APPS` and follow DRY and SRP principles.
+
+---
+
+# 📘 Guia de Desenvolvimento SentinelIQ: Implementação de APIs Enterprise-grade com Django REST Framework
+
+## 1. Estrutura e Componentes Fundamentais
+
+### 1.1 Respostas Padronizadas (`api.core.responses`)
+- `StandardResponse`: Classe base para formatação consistente
+- Métodos auxiliares:
+  - `success_response()` – Respostas 200 OK
+  - `error_response()` – Erros e validações (400, 500)
+  - `created_response()` – Criação de recursos (201)
+  - `no_content_response()` – Exclusão bem-sucedida (204)
+
+### 1.2 Controle de Acesso Baseado em Papéis (RBAC) (`api.core.rbac`)
+- `HasEntityPermission`: Classe principal para verificação de permissões por entidade
+- Integração com matriz de permissões em `auth_app.permission_matrix`
+- Métodos principais:
+  - `has_permission()` – Verifica permissão na view
+  - `has_object_permission()` – Isolamento por empresa
+
+### 1.3 Classes de Permissão (`api.core.permissions`)
+- `IsSuperUser`, `IsAdminCompany`, `IsAnalystCompany`, `IsCompanyMember`, `IsOwnerOrSuperUser`, `ReadOnly`
+
+### 1.4 Paginação (`api.core.pagination`)
+- `StandardResultsSetPagination` (50 itens)
+- `LargeResultsSetPagination` (100 itens)
+- `SmallResultsSetPagination` (10 itens)
+- `CustomPageSizePagination`
+
+### 1.5 ViewSets Aprimorados (`api.core.viewsets`)
+- Mixins CRUD: `CreateModelMixin`, `ListModelMixin`, `RetrieveModelMixin`, `UpdateModelMixin`, `DestroyModelMixin`
+- `StandardViewSet`, `ReadOnlyViewSet`
+
+### 1.6 Tratamento de Exceções (`api.core.exceptions`)
+- `custom_exception_handler`
+- Log automático e resposta padronizada
+
+### 1.7 Filtros (`api.core.filters`)
+- `ArrayFieldFilter`, `get_array_field_filter_overrides()`
+
+### 1.8 Middleware (`api.core.middleware`)
+- `RequestLoggingMiddleware`, `TenantContextMiddleware`, `SentryContextMiddleware`
+
+### 1.9 Logging e Auditoria (`api.core.audit`)
+- `AuditLogMixin`, `log_api_access()`, `audit_action`, `AuditLogTaskMixin`
+
+### 1.10 Registro de Modelos para Auditoria (`api.core.audit_registration`)
+- `register_all_models()` e exclusão de campos sensíveis
+
+### 1.11 Integração com Sentry (`api.core.audit_sentry`)
+- `initialize_audit_monitoring()`, `security_critical`, `track_audit_event()`, `monitor_security_events()`
+
+### 1.12 Tarefas Assíncronas (`api.core.tasks`)
+- `TaskResultMixin`, `AtomicTask`, `TransactionTask`, `audit_task`
+
+### 1.13 Documentação OpenAPI (`api.core.openapi`)
+- Customizações com `drf-spectacular`
+
+### 1.14 Views Base (`api.core.views`)
+- `APIView` com mixins e validações padrão
+
+### 1.15 Utilitários (`api.core.utils`)
+- Conversores, formatadores, funções comuns
+
+### 1.16 Throttling (`api.core.throttling`)
+- `StandardUserRateThrottle`, `AnonymousUserRateThrottle`
+
+---
+
+## 2. Implementação de um Novo Endpoint
+
+### 2.1 Criação da Aplicação
+- Via `startapp`
+- Estrutura modular com isolamento de tenant
+- Registro no Admin
+
+### 2.2 Serializers
+- Serializers padrão e expandidos
+
+### 2.3 Views
+- `views/__init__.py`, `views/your_model_create.py`, `views/your_model_list.py`
+- ViewSet com `StandardViewSet`
+
+### 2.4 Filtros e Ordenação
+
+### 2.5 Rotas em Kebab-case
+
+### 2.6 Ações Personalizadas com Auditoria
+
+### 2.7 Registro para Auditoria
+- Modelos + integração com Sentry
+
+---
+
+## 3. Testes
+
+### 3.1 Estrutura Centralizada
+
+### 3.2 Cobertura para CRUD, permissões e tenants
+
+---
+
+## 4. Documentação OpenAPI
+- `@extend_schema`, tags, exemplos e descrições
+
+---
+
+## 5. Execução via Docker
+
+### 5.1 Gerenciamento com Poetry
+
+### 5.2 Comandos Django via Docker
+
+---
+
+## 6. Monitoramento e Logs
+
+### 6.1 Estrutura de Logs
+
+### 6.2 Configuração de Logging
+
+---
+
+## 7. Lista de Verificação Final
+
+### 7.1 Estrutura
+✅ App via `startapp`, views modulares, serializers organizados, admin atualizado
+
+### 7.2 Segurança e RBAC
+✅ RBAC em todas as views, isolamento por empresa, permissões por entidade
+
+### 7.3 Respostas
+✅ Todas com `api.core.responses`, erros padronizados
+
+### 7.4 Auditoria
+✅ `AuditLogMixin`, `audit_action`, registro de modelos, Sentry
+
+### 7.5 Testes
+✅ Diretório `/tests/`, cobertura completa
+
+### 7.6 Documentação
+✅ `@extend_schema`, tags, exemplos
+
+### 7.7 Convenções
+✅ Kebab-case, inglês padrão, consistência geral
+
+---
+
+> **📌 Seguir este guia garante uma implementação 100% compatível com os padrões enterprise-grade definidos para a plataforma SentinelIQ.**
