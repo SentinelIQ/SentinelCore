@@ -1,0 +1,204 @@
+site_name: SentinelIQ Documentation
+site_description: Enterprise-grade Security Orchestration, Automation and Response platform
+site_author: SentinelIQ Team
+repo_url: https://github.com/sentineliq/sentineliq
+repo_name: sentineliq/sentineliq
+copyright: "&copy; 2023 SentinelIQ Team"
+
+theme:
+  name: material
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/weather-night
+        name: Switch to light mode
+  font:
+    text: Plus Jakarta Sans
+    code: JetBrains Mono
+  icon:
+    repo: fontawesome/brands/github
+    logo: material/shield-check
+  features:
+    # Navigation
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - navigation.top
+    - navigation.footer
+    - navigation.prune
+    - navigation.path
+    # Search
+    - search.suggest
+    - search.highlight
+    - search.share
+    # Content
+    - content.code.annotate
+    - content.code.copy
+    - content.action.edit
+    - content.action.view
+    - content.tooltips
+    - content.tabs.link
+    # Header
+    - header.autohide
+    # Toc
+    - toc.follow
+    - toc.integrate
+  favicon: assets/images/favicon.ico
+
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"/]+|(?!\b)(?=[A-Z][a-z])|\.(?!\d)|&[lg]t;'
+  - awesome-pages
+  - git-revision-date-localized:
+      type: datetime
+      fallback_to_build_date: true
+      enable_creation_date: true
+  - minify:
+      minify_html: true
+      minify_js: true
+      minify_css: true
+  - social:
+      cards_layout_options:
+        background_color: "#4051b5"
+        color: "#FFFFFF"
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - meta
+  - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 3
+  - tables
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+      auto_title: true
+      linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+      clickable_checkbox: true
+  - pymdownx.tilde
+  - pymdownx.critic
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/sentineliq/sentineliq
+    - icon: fontawesome/brands/docker
+      link: https://hub.docker.com/r/sentineliq/sentineliq
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/sentineliq
+  analytics:
+    provider: google
+    property: !ENV GOOGLE_ANALYTICS_KEY
+  consent:
+    title: Cookie consent
+    description: >- 
+      We use cookies to recognize your repeated visits and preferences, as well
+      as to measure the effectiveness of our documentation and whether users
+      find what they're searching for. With your consent, you're helping us to
+      make our documentation better.
+  status:
+    new: Recently added
+    deprecated: Deprecated
+
+nav:
+  - Home: index.md
+  - SentinelIQ:
+    - Overview: sentineliq/overview.md
+    - Download: sentineliq/download.md
+    - Installation:
+      - System Requirements: sentineliq/installation/requirements.md
+      - Quick Start: sentineliq/installation/quickstart.md
+      - Step-by-Step Guide: sentineliq/installation/step-by-step.md
+      - Docker Installation: sentineliq/installation/docker.md
+      - Kubernetes Deployment: sentineliq/installation/kubernetes.md
+      - Version Upgrades: sentineliq/installation/upgrades.md
+    - Configuration:
+      - Database & Index: sentineliq/configuration/database.md
+      - File Storage: sentineliq/configuration/storage.md
+      - Connectors: sentineliq/configuration/connectors.md
+      - Logs: sentineliq/configuration/logs.md
+      - Proxy: sentineliq/configuration/proxy.md
+      - SSL: sentineliq/configuration/ssl.md
+      - Service: sentineliq/configuration/service.md
+    - Operations:
+      - Cluster Operations: sentineliq/operations/cluster.md
+      - Security Operations: sentineliq/operations/security.md
+      - Backup & Restore: sentineliq/operations/backup-restore.md
+      - Monitoring: sentineliq/operations/monitoring.md
+      - Troubleshooting: sentineliq/operations/troubleshooting.md
+    - Administration:
+      - First Start: sentineliq/administration/first-start.md
+      - Organizations: sentineliq/administration/organizations.md
+      - User Management: sentineliq/administration/users.md
+      - Platform Management: sentineliq/administration/platform.md
+      - Authentication: sentineliq/administration/authentication.md
+      - SentinelVision Integration: sentineliq/administration/sentinelvision-integration.md
+    - User Guides:
+      - Getting Started: sentineliq/user-guides/getting-started.md
+      - Alerts Management: sentineliq/user-guides/alerts.md
+      - Cases Management: sentineliq/user-guides/cases.md
+      - Tasks Management: sentineliq/user-guides/tasks.md
+      - Dashboards: sentineliq/user-guides/dashboards.md
+      - Knowledge Base: sentineliq/user-guides/knowledge-base.md
+    - API:
+      - API Documentation: sentineliq/api/documentation.md
+      - Python Client: sentineliq/api/python-client.md
+  - SentinelVision:
+    - Overview: sentinelvision/overview.md
+    - Download: sentinelvision/download.md
+    - Installation:
+      - System Requirements: sentinelvision/installation/requirements.md
+      - Quick Start: sentinelvision/installation/quickstart.md
+      - Docker Installation: sentinelvision/installation/docker.md
+      - Configuration: sentinelvision/installation/configuration.md
+    - User Guides:
+      - Getting Started: sentinelvision/user-guides/getting-started.md
+      - Data Sources: sentinelvision/user-guides/data-sources.md
+      - Dashboards: sentinelvision/user-guides/dashboards.md
+      - Reports: sentinelvision/user-guides/reports.md
+      - SentinelIQ Integration: sentinelvision/user-guides/sentineliq-integration.md
+    - API:
+      - API Documentation: sentinelvision/api/documentation.md
+      - Integration Guide: sentinelvision/api/integration.md
+  - Release Notes: release-notes.md 

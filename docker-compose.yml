@@ -21,6 +21,22 @@ services:
       - CELERY_RESULT_BACKEND=redis://redis:6379/0
       - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
 
+  sentineliq-docs:
+    build:
+      context: .
+      dockerfile: Dockerfile.docs
+    volumes:
+      - ./docs:/docs/docs
+      - ./mkdocs.yml:/docs/mkdocs.yml
+    ports:
+      - "8002:8000"
+    restart: unless-stopped
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:8000 || exit 1
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
   db:
     image: postgres:15
@@ -423,21 +439,6 @@ services:
       retries: 3
     restart: on-failure
 
-  sentineliq-docs:
-    build:
-      context: .
-      dockerfile: Dockerfile.docs
-    ports:
-      - "3001:3000"
-    volumes:
-      - ./docs:/app
-    restart: unless-stopped
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 10s
 
 volumes:
   postgres_data:

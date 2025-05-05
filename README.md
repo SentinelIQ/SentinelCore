@@ -361,4 +361,39 @@ If audit logs are not being created:
 
 1. Check that the entity_type is set correctly
 2. Verify that the `audit_logs` app is in `INSTALLED_APPS`
-3. Check the Django logs for any errors in the audit logging process 
+3. Check the Django logs for any errors in the audit logging process
+
+## Documentation
+
+SentinelIQ comes with comprehensive documentation built with MkDocs. 
+
+To access the documentation:
+
+1. Start the documentation server:
+```bash
+docker compose up sentineliq-docs -d
+```
+
+2. Access the documentation at http://localhost:8002
+
+### Building Documentation
+
+The documentation is automatically built and served by the `sentineliq-docs` service.
+
+If you want to build the documentation manually:
+
+```bash
+docker compose exec sentineliq-docs mkdocs build
+```
+
+### Contributing to Documentation
+
+Documentation source files are located in the `docs/` directory and are written in Markdown.
+
+To add new documentation:
+
+1. Create or edit files in the `docs/` directory
+2. Update the navigation structure in `mkdocs.yml` if needed
+3. The documentation server will automatically refresh with your changes
+
+For more information on MkDocs, see the [MkDocs documentation](https://www.mkdocs.org/). 

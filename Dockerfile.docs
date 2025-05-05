@@ -1,19 +1,48 @@
-FROM node:20-slim
+FROM python:3.10-slim
 
-# Configurar diretório de trabalho
-WORKDIR /app
+WORKDIR /docs
 
-# Copiar arquivos de configuração
-COPY docs/package.json docs/package-lock.json ./
+# Install Git, Cairo, and necessary dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    libcairo2-dev \
+    libfreetype6-dev \
+    libffi-dev \
+    libjpeg-dev \
+    libpng-dev \
+    libwebp-dev \
+    pkg-config \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
-# Instalar dependências
-RUN npm ci
+# Install MkDocs and required plugins
+RUN pip install --no-cache-dir mkdocs \
+    mkdocs-material \
+    mkdocs-awesome-pages-plugin \
+    pymdown-extensions \
+    mkdocs-git-revision-date-localized-plugin \
+    mkdocs-minify-plugin \
+    mkdocs-material-extensions \
+    mkdocs-material[imaging] \
+    cairosvg \
+    pillow \
+    drf-spectacular \
+    drf-spectacular-sidecar \
+    mkdocs-swagger-ui-tag
 
-# Copiar o restante dos arquivos do projeto
-COPY docs/ ./
+# Copy documentation files
+COPY ./docs /docs/docs
+COPY mkdocs.yml /docs
 
-# Expor a porta para o servidor de desenvolvimento
-EXPOSE 3000
+# Initialize Git repository to support git-revision-date-localized-plugin
+RUN git init . && \
+    git config --global user.email "docs@sentineliq.example.com" && \
+    git config --global user.name "SentinelIQ Docs" && \
+    git add . && \
+    git commit -m "Initial documentation commit"
 
-# Comando padrão para iniciar Docusaurus em modo de desenvolvimento
-CMD ["npm", "start", "--", "--host", "0.0.0.0"] 
+# Expose MkDocs development server port
+EXPOSE 8000
+
+# Start MkDocs development server
+CMD ["mkdocs", "serve", "--dev-addr=0.0.0.0:8000"] 

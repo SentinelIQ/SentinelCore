@@ -50,4 +50,14 @@ poetry.lock
 
 # OS
 .DS_Store
-Thumbs.db 
+Thumbs.db
+
+# MkDocs build files
+site/
+docs/assets/images/architecture_diagram.png
+
+# MkDocs environment
+.venv/
+venv/
+ENV/
+env/ 
