@@ -1,5 +1,8 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
+# Define app name for namespace
+app_name = 'common'
+
 from . import views
 from api.core.views import test_sentry
 

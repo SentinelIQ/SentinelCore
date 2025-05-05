@@ -1,5 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+# Define app name for namespace
+app_name = 'notifications'
+
 from notifications.views import (
     NotificationViewSet, 
     NotificationChannelViewSet,

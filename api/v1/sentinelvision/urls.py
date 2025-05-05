@@ -1,5 +1,8 @@
 """
 URL patterns for the SentinelVision API.
+# Define app name for namespace
+app_name = 'sentinelvision'
+
 """
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter

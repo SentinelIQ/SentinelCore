@@ -1,5 +1,8 @@
 from django.urls import path, include
 from api.routers import KebabCaseRouter
+# Define app name for namespace
+app_name = 'alerts'
+
 from .views import AlertViewSet
 
 # Configure router

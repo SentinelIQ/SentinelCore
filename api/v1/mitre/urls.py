@@ -1,5 +1,8 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+# Define app name for namespace
+app_name = 'mitre'
+
 from api.v1.mitre.views import (
     MitreTacticView,
     MitreTechniqueView,

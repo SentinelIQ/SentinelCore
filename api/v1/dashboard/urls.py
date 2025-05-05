@@ -1,5 +1,8 @@
 """
 URL patterns for the dashboard API.
+# Define app name for namespace
+app_name = 'dashboard'
+
 """
 from django.urls import path
 
