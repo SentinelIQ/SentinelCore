@@ -5,7 +5,6 @@ from api.v1.auth.views import (
     CustomTokenObtainPairView,
     CustomTokenRefreshView,
     EmailPasswordTokenObtainView,
-    test_audit_log
 )
 from api.v1.audit_logs.views import AuditLogViewSet
 
@@ -25,9 +24,6 @@ urlpatterns = [
     
     # Audit logs endpoints - Authentication & Access Control related logs
     path('audit-logs/', AuditLogViewSet.as_view({'get': 'list'}), name='audit-logs'),
-    
-    # Test endpoint for audit logs - FOR TESTING ONLY, REMOVE IN PRODUCTION
-    path('test-audit-log/', test_audit_log, name='test-audit-log'),
 ]
 
 # Add router URLs
