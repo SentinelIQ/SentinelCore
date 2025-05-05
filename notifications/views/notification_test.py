@@ -6,6 +6,7 @@ from django.shortcuts import get_object_or_404
 
 from notifications.models import NotificationChannel
 from notifications.serializers import NotificationChannelSerializer
+from notifications.serializers.test_serializers import NotificationTestSerializer
 from notifications.permissions import ManageNotificationsPermission
 from notifications.tasks import send_test_notification
 from api.core.responses import success_response, error_response
@@ -26,14 +27,7 @@ class NotificationTestView(APIView):
         tags=['Notification System'],
         summary="Test a notification channel",
         description="Sends a test message through the specified notification channel to verify its configuration.",
-        request={
-            "type": "object",
-            "properties": {
-                "channel_id": {"type": "integer", "description": "ID of the notification channel to test"},
-                "message": {"type": "string", "description": "Custom test message (optional)"}
-            },
-            "required": ["channel_id"]
-        },
+        request=NotificationTestSerializer,
         responses={
             200: {
                 "type": "object",
@@ -63,15 +57,18 @@ class NotificationTestView(APIView):
         """
         Send a test notification through the specified channel.
         """
-        tenant = get_tenant_from_request(request)
-        channel_id = request.data.get('channel_id')
-        test_message = request.data.get('message', 'This is a test notification from SentinelIQ.')
-        
-        if not channel_id:
+        serializer = NotificationTestSerializer(data=request.data)
+        if not serializer.is_valid():
             return error_response(
-                message="Channel ID is required",
+                message="Invalid request data",
+                errors=serializer.errors,
                 status_code=status.HTTP_400_BAD_REQUEST
             )
+            
+        validated_data = serializer.validated_data
+        tenant = get_tenant_from_request(request)
+        channel_id = validated_data['channel_id']
+        test_message = validated_data.get('message', 'This is a test notification from SentinelIQ.')
         
         try:
             # Get the channel and ensure it belongs to the current tenant

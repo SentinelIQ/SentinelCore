@@ -3,7 +3,7 @@ from incidents.models import IncidentObservable
 from observables.models import Observable
 
 
-class ObservableLightSerializer(serializers.ModelSerializer):
+class IncidentObservableLightSerializer(serializers.ModelSerializer):
     """
     Lightweight serializer for Observable model used in incident context
     """
@@ -17,7 +17,7 @@ class IncidentObservableSerializer(serializers.ModelSerializer):
     """
     Serializer for the IncidentObservable through model
     """
-    observable = ObservableLightSerializer(read_only=True)
+    observable = IncidentObservableLightSerializer(read_only=True)
     
     class Meta:
         model = IncidentObservable

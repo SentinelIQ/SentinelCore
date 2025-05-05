@@ -36,6 +36,7 @@ class AlertViewSet(AlertCreateMixin, AlertDetailMixin, AlertCustomActionsMixin, 
     ordering_fields = ['created_at', 'updated_at', 'severity', 'status']
     ordering = ['-created_at']
     entity_type = 'alert'  # Define entity type for RBAC
+    lookup_field = 'id'  # Explicitly define the lookup field
     
     # Success messages for standardized responses
     success_message_create = "Alert created successfully"
@@ -115,6 +116,11 @@ class AlertViewSet(AlertCreateMixin, AlertDetailMixin, AlertCustomActionsMixin, 
         """
         Returns only alerts from the user's company, unless the user is a superuser.
         """
+        # Handle schema generation
+        if getattr(self, 'swagger_fake_view', False):
+            # Return empty queryset for schema generation
+            return Alert.objects.none()
+        
         user = self.request.user
         
         if user.is_superuser:

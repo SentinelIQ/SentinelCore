@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from api.core.responses import success_response, error_response
 from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
 import logging
+from ..serializers.user_management import DeactivateUsersSerializer
 
 User = get_user_model()
 logger = logging.getLogger(__name__)
@@ -329,17 +330,7 @@ class CompanyCustomActionsMixin:
             "system access. Safety measures prevent company administrators from deactivating "
             "other administrators, which requires superuser privileges."
         ),
-        request={
-            "type": "object",
-            "properties": {
-                "user_ids": {
-                    "type": "array",
-                    "items": {"type": "string", "format": "uuid"},
-                    "description": "List of user IDs to deactivate"
-                }
-            },
-            "required": ["user_ids"]
-        },
+        request=DeactivateUsersSerializer,
         responses={
             200: OpenApiResponse(
                 description="Users deactivated successfully",
@@ -405,6 +396,17 @@ class CompanyCustomActionsMixin:
         """
         company = self.get_object()
         
+        # Validate the input data
+        serializer = DeactivateUsersSerializer(data=request.data)
+        if not serializer.is_valid():
+            return error_response(
+                message="Invalid input data",
+                errors=serializer.errors,
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+        
+        user_ids = serializer.validated_data['user_ids']
+        
         # RBAC handles base permission checks, but we need additional role-specific check
         # Only superuser and admin_company should access this action
         if not (request.user.is_superuser or request.user.role == User.Role.ADMIN_COMPANY):
@@ -414,15 +416,6 @@ class CompanyCustomActionsMixin:
                 status_code=status.HTTP_403_FORBIDDEN
             )
             
-        user_ids = request.data.get('user_ids', [])
-        
-        if not user_ids:
-            return error_response(
-                message="You must provide at least one user ID",
-                code="invalid_request",
-                status_code=status.HTTP_400_BAD_REQUEST
-            )
-        
         # Filter users by company
         users = User.objects.filter(id__in=user_ids, company=company)
         

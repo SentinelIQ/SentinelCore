@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from mitre.models import MitreTactic
+from drf_spectacular.utils import extend_schema_field
 
 
 class MitreTacticSerializer(serializers.ModelSerializer):
@@ -23,6 +24,7 @@ class MitreTacticDetailSerializer(serializers.ModelSerializer):
         fields = ['id', 'external_id', 'name', 'description', 'technique_count', 'created_at', 'updated_at']
         read_only_fields = ['id', 'external_id', 'name', 'description', 'created_at', 'updated_at']
     
+    @extend_schema_field(serializers.IntegerField())
     def get_technique_count(self, obj):
         """Get count of techniques associated with this tactic"""
         return obj.techniques.count() 

@@ -5,10 +5,11 @@ from companies.models import Company
 from api.v1.auth.enums import UserRoleEnum
 from api.core.utils.enum_utils import enum_to_choices
 from .company_nested import CompanyNestedSerializer
+from drf_spectacular.utils import extend_schema_serializer
 
 User = get_user_model()
 
-
+@extend_schema_serializer(component_name="APIUserSerializer")
 class UserSerializer(serializers.ModelSerializer):
     """
     Complete serializer for the User model.

@@ -3,6 +3,7 @@ from incidents.models import IncidentTask
 from auth_app.models import User
 from api.v1.incidents.enums import IncidentTaskStatusEnum
 from api.core.utils.enum_utils import enum_to_choices
+from drf_spectacular.utils import extend_schema_field
 
 
 class AssigneeLightSerializer(serializers.ModelSerializer):
@@ -34,6 +35,7 @@ class IncidentTaskSerializer(serializers.ModelSerializer):
         ]
         read_only_fields = ['id', 'created_at', 'updated_at', 'completed_at']
     
+    @extend_schema_field(serializers.BooleanField())
     def get_is_overdue(self, obj):
         """
         Check if the task is overdue

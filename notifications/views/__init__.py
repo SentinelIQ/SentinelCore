@@ -12,6 +12,7 @@ user preferences, and message templating.
 
 from api.core.viewsets import StandardViewSet
 from drf_spectacular.utils import extend_schema
+from notifications.models import Notification, NotificationChannel, NotificationRule
 
 from .notification_list import NotificationListView
 from .notification_detail import NotificationDetailView
@@ -51,6 +52,7 @@ class NotificationViewSet(
     listing, retrieving, creating, and marking as read.
     """
     entity_type = 'notification'  # Define entity type for RBAC
+    queryset = Notification.objects.none()  # Default empty queryset for schema generation
     
     # Success messages for standardized responses
     success_message_create = "Notification created successfully"
@@ -70,6 +72,7 @@ class NotificationChannelViewSet(
     listing, retrieving, and creating channels.
     """
     entity_type = 'notification_channel'  # Define entity type for RBAC
+    queryset = NotificationChannel.objects.none()  # Default empty queryset for schema generation
     
     # Success messages for standardized responses
     success_message_create = "Notification channel created successfully"
@@ -107,6 +110,7 @@ class NotificationRuleViewSet(
     listing, retrieving, creating, updating, and deleting rules.
     """
     entity_type = 'notification_rule'  # Define entity type for RBAC
+    queryset = NotificationRule.objects.none()  # Default empty queryset for schema generation
     
     # Success messages for standardized responses
     success_message_create = "Notification rule created successfully"

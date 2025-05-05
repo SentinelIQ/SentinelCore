@@ -3,11 +3,12 @@ from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from mitre.models import ObservableMitreMapping
 from api.v1.mitre.serializers import ObservableMitreMappingSerializer
+from api.v1.mitre.serializers.mitre_mapping_params import ObservableMitreMappingQuerySerializer
 from api.core.rbac import HasEntityPermission
 from api.core.pagination import StandardResultsSetPagination
 from api.core.responses import success_response, error_response
 from api.core.viewsets import StandardViewSet
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 
 
 @extend_schema_view(
@@ -82,14 +83,13 @@ class ObservableMitreMappingView(StandardViewSet):
     @extend_schema(
         summary="Bulk delete mappings",
         description="Delete all MITRE mappings for a specific observable",
-        parameters=[
-            {
-                "name": "observable_id",
-                "in": "query",
-                "required": True,
-                "schema": {"type": "string", "format": "uuid"}
-            }
-        ],
+        parameters=[OpenApiParameter(
+            name="observable_id",
+            location=OpenApiParameter.QUERY,
+            required=True,
+            description="UUID of the observable to delete mappings for (UUID format)",
+            type=str
+        )],
         responses={
             200: {
                 "type": "object",
@@ -113,9 +113,16 @@ class ObservableMitreMappingView(StandardViewSet):
         """
         Delete multiple mappings in a single request
         """
-        observable_id = request.query_params.get('observable_id')
-        if not observable_id:
-            return error_response("Observable ID is required", status_code=status.HTTP_400_BAD_REQUEST)
+        # Validate query parameters
+        serializer = ObservableMitreMappingQuerySerializer(data=request.query_params)
+        if not serializer.is_valid():
+            return error_response(
+                message="Invalid parameters",
+                errors=serializer.errors,
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+            
+        observable_id = serializer.validated_data['observable_id']
             
         # Apply tenant isolation
         if not request.user.is_superuser:

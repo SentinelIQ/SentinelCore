@@ -4,11 +4,12 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db.models import Q
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse, extend_schema_view
 
 from api.core.responses import (
     success_response, error_response, StandardResponse
 )
+from api.core.pagination import StandardResultsSetPagination
 from sentinelvision.models import (
     EnrichedIOC, IOCFeedMatch, IOCTypeEnum, EnrichmentStatusEnum
 )
@@ -19,12 +20,126 @@ from api.v1.sentinelvision.serializers import (
 from sentinelvision.permissions import CanExecuteFeedPermission
 from sentinelvision.tasks.enrichment_tasks import enrich_observable
 
+@extend_schema_view(
+    list_observables=extend_schema(
+        tags=['Threat Intelligence (SentinelVision)'],
+        description='List enriched observables (IOCs) for the current company.',
+        responses={
+            200: OpenApiResponse(
+                description="Observable list retrieved successfully",
+                response=EnrichedIOCSerializer(many=True)
+            ),
+            403: OpenApiResponse(
+                description="Permission denied",
+                examples=[
+                    OpenApiExample(
+                        name="permission_denied",
+                        summary="Permission denied error",
+                        description="Example of response when user lacks permission",
+                        value={
+                            "status": "error",
+                            "message": "You do not have permission to view enriched observables",
+                            "data": None
+                        }
+                    )
+                ]
+            )
+        },
+        parameters=[
+            OpenApiParameter(
+                name='status',
+                description='Filter by enrichment status',
+                required=False,
+                type=str,
+                enum=['pending', 'enriched', 'not_found']
+            ),
+            OpenApiParameter(
+                name='ioc_type',
+                description='Filter by IOC type',
+                required=False,
+                type=str,
+                enum=[choice[0] for choice in IOCTypeEnum.choices]
+            ),
+            OpenApiParameter(
+                name='value',
+                description='Search by IOC value',
+                required=False,
+                type=str
+            )
+        ]
+    ),
+    observable_details=extend_schema(
+        tags=['Threat Intelligence (SentinelVision)'],
+        description='Get details of a specific enriched observable (IOC).',
+        responses={
+            200: OpenApiResponse(
+                description="Observable details retrieved successfully",
+                response=EnrichedIOCSerializer()
+            ),
+            404: OpenApiResponse(
+                description="Observable not found",
+                examples=[
+                    OpenApiExample(
+                        name="observable_not_found",
+                        summary="Observable not found error",
+                        description="Example of response when the specified observable doesn't exist",
+                        value={
+                            "status": "error",
+                            "message": "Observable not found",
+                            "data": None
+                        }
+                    )
+                ]
+            ),
+            403: OpenApiResponse(
+                description="Permission denied",
+                examples=[
+                    OpenApiExample(
+                        name="permission_denied",
+                        summary="Permission denied error",
+                        description="Example of response when user lacks permission",
+                        value={
+                            "status": "error",
+                            "message": "You do not have permission to view this observable",
+                            "data": None
+                        }
+                    )
+                ]
+            )
+        },
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                description='The ID of the enriched observable',
+                required=True,
+                type=str,
+                location=OpenApiParameter.PATH
+            )
+        ]
+    )
+)
 @extend_schema(tags=['Threat Intelligence (SentinelVision)'])
 class EnrichmentViewSet(viewsets.ViewSet):
     """
     API endpoints for enriching and managing observables (IOCs).
     """
     permission_classes = [CanExecuteFeedPermission]
+    pagination_class = StandardResultsSetPagination
+    
+    def get_queryset(self):
+        """Return the queryset for the viewset or a fake one for swagger"""
+        if getattr(self, 'swagger_fake_view', False):
+            return EnrichedIOC.objects.none()
+        
+        # Real queryset filtered by company
+        return EnrichedIOC.objects.filter(company=self.request.user.company)
+    
+    def get_serializer_class(self):
+        """Return the serializer class based on the action"""
+        if self.action == 'enrich_observable':
+            return EnrichObservableRequestSerializer
+        else:
+            return EnrichedIOCSerializer
     
     @extend_schema(
         tags=['Threat Intelligence (SentinelVision)'],
@@ -149,7 +264,7 @@ class EnrichmentViewSet(viewsets.ViewSet):
         This is an asynchronous operation that will return a task ID.
         """
         # Validate request
-        serializer = EnrichObservableRequestSerializer(data=request.data)
+        serializer = self.get_serializer_class()(data=request.data)
         if not serializer.is_valid():
             return error_response(
                 message="Invalid request parameters",
@@ -166,7 +281,7 @@ class EnrichmentViewSet(viewsets.ViewSet):
         company = request.user.company
         
         # Check if this IOC already exists for this company
-        existing_ioc = EnrichedIOC.objects.filter(
+        existing_ioc = self.get_queryset().filter(
             company=company,
             ioc_type=ioc_type,
             value=ioc_value
@@ -174,7 +289,7 @@ class EnrichmentViewSet(viewsets.ViewSet):
         
         if existing_ioc and existing_ioc.is_enriched:
             # Return existing enrichment data
-            serializer = EnrichedIOCSerializer(existing_ioc)
+            serializer = self.get_serializer_class()(existing_ioc)
             return success_response(
                 message=f"Observable already enriched",
                 data={
@@ -241,7 +356,7 @@ class EnrichmentViewSet(viewsets.ViewSet):
         company = request.user.company
         
         # Build queryset with filters
-        queryset = EnrichedIOC.objects.filter(company=company)
+        queryset = self.get_queryset()
         
         # Apply filters
         status = request.query_params.get('status')
@@ -262,11 +377,11 @@ class EnrichmentViewSet(viewsets.ViewSet):
         # Paginate results
         page = self.paginate_queryset(queryset)
         if page is not None:
-            serializer = EnrichedIOCSerializer(page, many=True)
+            serializer = self.get_serializer_class()(page, many=True)
             return self.get_paginated_response(serializer.data)
             
         # If no pagination, serialize all results
-        serializer = EnrichedIOCSerializer(queryset, many=True)
+        serializer = self.get_serializer_class()(queryset, many=True)
         
         return success_response(
             message=f"Found {queryset.count()} enriched observables",
@@ -291,10 +406,10 @@ class EnrichmentViewSet(viewsets.ViewSet):
         company = request.user.company
         
         # Get the IOC
-        ioc = get_object_or_404(EnrichedIOC, id=pk, company=company)
+        ioc = get_object_or_404(self.get_queryset(), id=pk, company=company)
         
         # Serialize with feed matches
-        serializer = EnrichedIOCSerializer(ioc)
+        serializer = self.get_serializer_class()(ioc)
         
         return success_response(
             message=f"Details for {ioc.get_ioc_type_display()}: {ioc.value}",
@@ -376,7 +491,7 @@ class EnrichmentViewSet(viewsets.ViewSet):
         company = request.user.company
         
         # Get the IOC
-        ioc = get_object_or_404(EnrichedIOC, id=pk, company=company)
+        ioc = get_object_or_404(self.get_queryset(), id=pk, company=company)
         
         # Launch enrichment task
         task = enrich_observable.delay(

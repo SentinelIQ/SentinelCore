@@ -57,7 +57,7 @@ class IncidentSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 
-class UserLightSerializer(serializers.ModelSerializer):
+class IncidentUserLightSerializer(serializers.ModelSerializer):
     """
     Simplified User serializer used in IncidentDetailSerializer.
     """
@@ -88,8 +88,8 @@ class IncidentDetailSerializer(IncidentSerializer):
     """
     Detailed serializer for Incident, used in detail views.
     """
-    created_by = UserLightSerializer(read_only=True)
-    assignee = UserLightSerializer(read_only=True)
+    created_by = IncidentUserLightSerializer(read_only=True)
+    assignee = IncidentUserLightSerializer(read_only=True)
     related_alerts = AlertLightSerializer(many=True, read_only=True)
     incident_observables = IncidentObservableSerializer(many=True, read_only=True)
     tasks = IncidentTaskSerializer(many=True, read_only=True)

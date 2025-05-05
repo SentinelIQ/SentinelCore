@@ -15,6 +15,7 @@ from ..permissions import CanAccessArticle, CanManageArticle
 from api.core.responses import success_response, error_response
 from api.core.viewsets import StandardViewSet
 from api.core.filters import get_array_field_filter_overrides
+from api.core.pagination import StandardResultsSetPagination
 import markdown2
 
 logger = logging.getLogger('api.wiki')
@@ -266,16 +267,25 @@ class KnowledgeArticleFilterSet(FilterSet):
 )
 class KnowledgeArticleViewSet(StandardViewSet):
     """
-    API endpoint for managing knowledge articles (the wiki).
+    ViewSet for Knowledge Articles that represent the internal wiki.
+    
+    Knowledge articles store important security documentation such as 
+    playbooks, procedures, and reference materials.
     """
     serializer_class = KnowledgeArticleSerializer
     lookup_field = 'slug'
+    pagination_class = StandardResultsSetPagination
+    permission_classes = [CanAccessArticle]
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_class = KnowledgeArticleFilterSet
-    search_fields = ['title', 'slug', 'content', 'tags']
-    ordering_fields = ['title', 'created_at', 'updated_at', 'published_at']
-    ordering = ['-updated_at']
-    entity_type = 'knowledge_article'  # Define entity type for RBAC
+    search_fields = ['title', 'content', 'tags']
+    ordering_fields = ['title', 'created_at', 'updated_at', 'is_reviewed']
+    ordering = ['title']
+    entity_type = 'wiki'  # Define entity type for RBAC
+    
+    # Define visibility constants for easier reference
+    VISIBILITY_PUBLIC = 'public'
+    VISIBILITY_PRIVATE = 'private'
     
     # Success messages for standardized responses
     success_message_create = "Article created successfully"
@@ -284,46 +294,45 @@ class KnowledgeArticleViewSet(StandardViewSet):
     
     def get_permissions(self):
         """
-        - List/retrieve: CanAccessArticle
-        - Create: IsAuthenticated
-        - Update/delete: CanManageArticle
+        Override to add object permissions for detail views.
         """
-        if self.action in ['update', 'partial_update', 'destroy']:
-            return [CanManageArticle()]
-        elif self.action in ['retrieve', 'list']:
-            return [IsAuthenticated(), CanAccessArticle()]
-        return [IsAuthenticated()]
+        if self.action == 'create':
+            permission_classes = [IsAuthenticated]  # Basic auth check for creation
+        else:
+            permission_classes = self.permission_classes
+            
+        return [permission() for permission in permission_classes]
     
     def get_queryset(self):
         """
-        Filter articles based on user's company and article visibility:
-        - Superusers see all articles
-        - Company users see public articles and their company's private articles
+        Return articles based on visibility and company.
+        
+        - Public articles are visible to all
+        - Private articles are only visible to users in the same company
         """
+        # Handle schema generation
+        if getattr(self, 'swagger_fake_view', False):
+            # Return empty queryset for schema generation
+            return KnowledgeArticle.objects.none()
+            
         user = self.request.user
         
-        # Superusers can see all
-        if user.is_superuser:
-            return KnowledgeArticle.objects.all()
+        # Base queryset starts with all public articles
+        queryset = KnowledgeArticle.objects.filter(visibility=self.VISIBILITY_PUBLIC)
         
-        # Company users see public articles and their company's private articles
-        if hasattr(user, 'company') and user.company:
-            return KnowledgeArticle.objects.filter(
-                models.Q(visibility=KnowledgeArticle.Visibility.PUBLIC) |  # Public
-                models.Q(visibility=KnowledgeArticle.Visibility.PRIVATE, company=user.company)  # Private for company
-            ).filter(
-                models.Q(expires_at__isnull=True) | models.Q(expires_at__gt=timezone.now())  # Not expired
-            ).filter(
-                published_at__lte=timezone.now()  # Already published
+        # If user is authenticated, add private articles for their company
+        if user.is_authenticated and hasattr(user, 'company') and user.company:
+            # Combine public articles with private articles for user's company
+            queryset = queryset | KnowledgeArticle.objects.filter(
+                visibility=self.VISIBILITY_PRIVATE,
+                company=user.company
             )
         
-        # Users without company only see public articles
-        return KnowledgeArticle.objects.filter(
-            visibility=KnowledgeArticle.Visibility.PUBLIC,
-            published_at__lte=timezone.now()
-        ).filter(
-            models.Q(expires_at__isnull=True) | models.Q(expires_at__gt=timezone.now())
-        )
+        # If user is superuser, show all articles
+        if user.is_superuser:
+            queryset = KnowledgeArticle.objects.all()
+            
+        return queryset.distinct()
     
     def perform_create(self, serializer):
         """

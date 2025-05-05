@@ -7,9 +7,9 @@ from .channel_serializers import NotificationChannelSerializer
 
 User = get_user_model()
 
-class UserSerializer(serializers.ModelSerializer):
+class NotificationUserSerializer(serializers.ModelSerializer):
     """
-    Simple serializer for User model.
+    Simple serializer for User model in notification context.
     """
     class Meta:
         model = User
@@ -21,7 +21,7 @@ class NotificationRuleSerializer(serializers.ModelSerializer):
     """
     channels_data = NotificationChannelSerializer(source='channels', many=True, read_only=True)
     company_data = CompanySerializer(source='company', read_only=True)
-    created_by_data = UserSerializer(source='created_by', read_only=True)
+    created_by_data = NotificationUserSerializer(source='created_by', read_only=True)
     
     class Meta:
         model = NotificationRule

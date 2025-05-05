@@ -233,76 +233,21 @@ SPECTACULAR_SETTINGS = {
             }
         }
     },
-    # Standardized enum names to prevent collisions in OpenAPI schema
-    'ENUM_NAME_OVERRIDES': {
-        # Alerts
-        'AlertSeverityEnum': 'AlertSeverity',
-        'AlertStatusEnum': 'AlertStatus',
-        'AlertTLPEnum': 'AlertTLP',
-        'AlertPAPEnum': 'AlertPAP',
-        
-        # Incidents
-        'IncidentSeverityEnum': 'IncidentSeverity',
-        'IncidentStatusEnum': 'IncidentStatus',
-        'IncidentTLPEnum': 'IncidentTLP',
-        'IncidentPAPEnum': 'IncidentPAP',
-        'TimelineEventTypeEnum': 'TimelineEventType',
-        'IncidentTaskStatusEnum': 'IncidentTaskStatus',
-        
-        # Observables
-        'ObservableCategoryEnum': 'ObservableCategory',
-        'ObservableTypeEnum': 'ObservableType',
-        'ObservableTLPEnum': 'ObservableTLP',
-        'ObservableRelationTypeEnum': 'ObservableRelationType',
-        
-        # Tasks
-        'TaskStatusEnum': 'TaskStatus',
-        'TaskPriorityEnum': 'TaskPriority',
-        
-        # Wiki
-        'ArticleVisibilityEnum': 'ArticleVisibility',
-        
-        # Auth
-        'UserRoleEnum': 'UserRole',
-        
-        # Notifications
-        'NotificationChannelTypeEnum': 'NotificationChannelType',
-        'NotificationEventTypeEnum': 'NotificationEventType',
-        'NotificationPriorityEnum': 'NotificationPriority',
-        'NotificationCategoryEnum': 'NotificationCategory',
-        'NotificationDeliveryStatusEnum': 'NotificationDeliveryStatus',
-        
-        # MITRE
-        'MitreRelationshipTypeEnum': 'MitreRelationshipType',
-        
-        # Companies
-        'CompanyStatusEnum': 'CompanyStatus',
-        'CompanyTypeEnum': 'CompanyType',
-        
-        # Dashboard
-        'TimeRangeEnum': 'TimeRange',
-        'WidgetTypeEnum': 'WidgetType',
-        'ChartTypeEnum': 'ChartType',
-        
-        # Reporting
-        'ReportFormatEnum': 'ReportFormat',
-        'ReportTemplateEnum': 'ReportTemplate',
-        'ReportEntityTypeEnum': 'ReportEntityType',
-        
-        # SentinelVision
-        'ModuleTypeEnum': 'ModuleType',
-        'ModuleStatusEnum': 'ModuleStatus',
-        'FeedTypeEnum': 'FeedType',
-        'AnalyzerTypeEnum': 'AnalyzerType',
-        'ResponderTypeEnum': 'ResponderType',
-        
-        # Common
-        'PriorityEnum': 'Priority',
-        'StatusEnum': 'Status',
-        'TLPEnum': 'TLP',
-        'PAPEnum': 'PAP',
-        'ActionTypeEnum': 'ActionType',
-    },
+    # We'll rely primarily on our custom resolver rather than hard-coded overrides
+    'ENUM_NAME_OVERRIDES': {},
+    
+    # Turn off enum name formatting and let the custom resolver handle everything
+    'ENUM_NAME_HANDLING': 'do_not_format',
+    
+    # Custom resolution for enum naming and schema generation
+    'ENUM_NAME_RESOLVER': 'api.core.openapi.custom_enum_name_resolver',
+    'COMPONENT_SPLIT_REQUEST': True,
+    'COMPONENT_SPLIT_PATCH': True,
+    'COMPONENT_NO_READ_ONLY_REQUIRED': True,
+    'REUSE_SCHEMA_DEFINITIONS': True,
+    'SCHEMA_PATH_PREFIX_TRIM': False,
+    'ENUM_ADD_EXPLICIT_BLANK_NULL_CHOICE': False,
+    
     # Example responses
     'EXAMPLES_FACTORY': 'api.core.openapi.get_examples',
 }

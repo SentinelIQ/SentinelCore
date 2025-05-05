@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from incidents.models import TimelineEvent
+from drf_spectacular.utils import extend_schema_field
 
 
 class TimelineEventSerializer(serializers.ModelSerializer):
@@ -14,6 +15,7 @@ class TimelineEventSerializer(serializers.ModelSerializer):
                  'user', 'user_name', 'timestamp', 'created_at']
         read_only_fields = ['id', 'created_at', 'user_name']
     
+    @extend_schema_field(serializers.CharField())
     def get_user_name(self, obj):
         """
         Returns the user's display name.

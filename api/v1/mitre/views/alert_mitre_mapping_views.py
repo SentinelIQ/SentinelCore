@@ -3,11 +3,12 @@ from rest_framework.decorators import action
 from django_filters.rest_framework import DjangoFilterBackend
 from mitre.models import AlertMitreMapping
 from api.v1.mitre.serializers import AlertMitreMappingSerializer
+from api.v1.mitre.serializers.mitre_mapping_params import AlertMitreMappingQuerySerializer
 from api.core.rbac import HasEntityPermission
 from api.core.pagination import StandardResultsSetPagination
 from api.core.responses import success_response, error_response
 from api.core.viewsets import StandardViewSet
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiParameter
 
 
 @extend_schema_view(
@@ -92,14 +93,13 @@ class AlertMitreMappingView(StandardViewSet):
     @extend_schema(
         summary="Bulk delete mappings",
         description="Delete all MITRE mappings for a specific alert",
-        parameters=[
-            {
-                "name": "alert_id",
-                "in": "query",
-                "required": True,
-                "schema": {"type": "string", "format": "uuid"}
-            }
-        ],
+        parameters=[OpenApiParameter(
+            name="alert_id",
+            location=OpenApiParameter.QUERY,
+            required=True,
+            description="UUID of the alert to delete mappings for (UUID format)",
+            type=str
+        )],
         responses={
             200: {
                 "type": "object",
@@ -123,9 +123,16 @@ class AlertMitreMappingView(StandardViewSet):
         """
         Delete multiple mappings in a single request
         """
-        alert_id = request.query_params.get('alert_id')
-        if not alert_id:
-            return error_response("Alert ID is required", status_code=status.HTTP_400_BAD_REQUEST)
+        # Validate query parameters
+        serializer = AlertMitreMappingQuerySerializer(data=request.query_params)
+        if not serializer.is_valid():
+            return error_response(
+                message="Invalid parameters",
+                errors=serializer.errors,
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+            
+        alert_id = serializer.validated_data['alert_id']
             
         # Apply tenant isolation
         if not request.user.is_superuser:

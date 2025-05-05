@@ -230,6 +230,47 @@ Following this guide, the Django DRF project becomes:
 - ✅ When upgrading or refactoring an app, the `admin.py` file MUST be reviewed and updated to match the current model structure and use modern admin features.
 - ❌ Maintaining compatibility with outdated admin configurations is NOT allowed. All configurations must reflect the latest structure and standards of the app.
 
+API Development Rules for AI Systems Building Enterprise Django REST APIs
+Document All API Elements Explicitly
+Always annotate endpoints with @extend_schema including tags, descriptions, and responses
+Never rely on automatic schema generation for complex components
+Define explicit response examples for both success and error cases
+Handle Enum Fields Uniquely
+Implement a custom enum resolver that uses app/model prefixes for common fields
+Never use the same enum name across different contexts (status, type, priority, etc.)
+Set ENUM_NAME_HANDLING: 'do_not_format' and use a custom resolver function
+Type Every Serializer Method
+Annotate all SerializerMethodField with @extend_schema_field(ReturnType())
+Include allow_null=True for fields that may return None
+Be explicit about return types (BooleanField, IntegerField, CharField, etc.)
+Use Proper Response Components
+Use OpenApiResponse with response type and examples
+Avoid direct StandardResponse references in schema declarations
+Provide multiple realistic examples for request/response pairs
+Define Path Parameters Correctly
+Declare path parameters with OpenApiParameter(location=OpenApiParameter.PATH)
+Specify exact type information for every parameter
+Mark required parameters appropriately
+Structure Schemas Systematically
+Enable component splitting with COMPONENT_SPLIT_REQUEST: True
+Use REUSE_SCHEMA_DEFINITIONS: True for component reuse
+Configure systematic tagging to group related endpoints
+Implement Consistent Response Formats
+Define a central response format handler (like success_response)
+Document response structure in schema examples that match actual returns
+Include pagination metadata consistently in list responses
+Validate Schema During Development
+Run schema validation checks before committing code
+Test schema endpoints with automated tools
+Fix enum conflicts immediately during development
+Maintain Tag Consistency
+Use predefined tags from settings rather than ad-hoc tagging
+Group related functionality under consistent tag names
+Document tag meanings in OpenAPI schema configuration
+Handle Serializer Context Properly
+Pass request context to nested serializers
+Consider context in serializer method fields
+Document context dependencies in code comments
 
 
 

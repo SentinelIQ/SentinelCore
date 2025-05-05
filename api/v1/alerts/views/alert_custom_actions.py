@@ -528,7 +528,13 @@ class AlertCustomActionsMixin:
         summary="Remove observable from alert",
         description="Removes the link between an observable and this alert.",
         parameters=[
-            OpenApiParameter(name="observable_id", description="UUID of the observable to remove", required=True, type=str)
+            OpenApiParameter(
+                name="observable_id", 
+                location=OpenApiParameter.PATH,
+                required=True, 
+                type=str,
+                description="UUID of the observable to remove (UUID format)"
+            )
         ],
         responses={
             200: OpenApiResponse(description="Observable removed successfully"),
@@ -536,7 +542,7 @@ class AlertCustomActionsMixin:
             500: OpenApiResponse(description="Server error")
         }
     )
-    @action(detail=True, methods=['delete'], url_path='remove-observable/(?P<observable_id>[^/.]+)')
+    @action(detail=True, methods=['delete'], url_path='remove-observable/(?P<observable_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})')
     def remove_observable(self, request, pk=None, observable_id=None):
         """
         Removes an observable from this alert.

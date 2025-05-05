@@ -315,6 +315,31 @@ class UserViewSet(
     ordering_fields = ['username', 'email', 'date_joined']
     ordering = ['username']
     entity_type = 'user'  # Define entity type for RBAC
+    
+    def get_queryset(self):
+        """
+        Returns users based on permission level:
+        - Superusers see all users
+        - Company admins see users in their company
+        - Regular users see only themselves
+        """
+        # Handle schema generation
+        if getattr(self, 'swagger_fake_view', False):
+            # Return empty queryset for schema generation
+            return User.objects.none()
+            
+        user = self.request.user
+        
+        # Superuser sees all users
+        if user.is_superuser:
+            return User.objects.all()
+            
+        # Company admin sees users in their company
+        if user.is_admin_company and hasattr(user, 'company') and user.company:
+            return User.objects.filter(company=user.company)
+            
+        # Regular user sees only themselves
+        return User.objects.filter(id=user.id)
 
 __all__ = [
     'UserViewSet',

@@ -508,14 +508,20 @@ class IncidentCustomActionsMixin:
         summary="Remove observable",
         description="Removes an observable from this incident.",
         parameters=[
-            OpenApiParameter(name="observable_id", description="ID of the observable to remove", required=True, type=str)
+            OpenApiParameter(
+                name="observable_id",
+                description="UUID of the observable to remove",
+                required=True,
+                type=str,
+                location=OpenApiParameter.PATH
+            )
         ],
         responses={
             200: OpenApiResponse(description="Observable removed successfully"),
             404: OpenApiResponse(description="Observable not found in this incident")
         }
     )
-    @action(detail=True, methods=['delete'], url_path='remove-observable/(?P<observable_id>[^/.]+)')
+    @action(detail=True, methods=['delete'], url_path='remove-observable/(?P<observable_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})')
     def remove_observable(self, request, pk=None, observable_id=None):
         """
         Remove an observable from this incident.
@@ -747,7 +753,13 @@ class IncidentCustomActionsMixin:
         summary="Update task",
         description="Updates an existing task in this incident.",
         parameters=[
-            OpenApiParameter(name="task_id", description="ID of the task to update", required=True, type=str)
+            OpenApiParameter(
+                name="task_id",
+                description="UUID of the task to update",
+                required=True,
+                type=str,
+                location=OpenApiParameter.PATH
+            )
         ],
         request=IncidentTaskUpdateSerializer,
         responses={
@@ -756,7 +768,7 @@ class IncidentCustomActionsMixin:
             404: OpenApiResponse(description="Task not found")
         }
     )
-    @action(detail=True, methods=['patch'], url_path='update-task/(?P<task_id>[^/.]+)')
+    @action(detail=True, methods=['patch'], url_path='update-task/(?P<task_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})')
     def update_task(self, request, pk=None, task_id=None):
         """
         Update a task in this incident.
@@ -822,14 +834,20 @@ class IncidentCustomActionsMixin:
         summary="Delete task",
         description="Deletes a task from this incident.",
         parameters=[
-            OpenApiParameter(name="task_id", description="ID of the task to delete", required=True, type=str)
+            OpenApiParameter(
+                name="task_id",
+                description="UUID of the task to delete",
+                required=True,
+                type=str,
+                location=OpenApiParameter.PATH
+            )
         ],
         responses={
             200: OpenApiResponse(description="Task deleted successfully"),
             404: OpenApiResponse(description="Task not found")
         }
     )
-    @action(detail=True, methods=['delete'], url_path='delete-task/(?P<task_id>[^/.]+)')
+    @action(detail=True, methods=['delete'], url_path='delete-task/(?P<task_id>[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})')
     def delete_task(self, request, pk=None, task_id=None):
         """
         Delete a task from this incident.

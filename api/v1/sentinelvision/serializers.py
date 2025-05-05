@@ -6,6 +6,7 @@ from sentinelvision.models import (
     EnrichedIOC, IOCFeedMatch, IOCTypeEnum, EnrichmentStatusEnum,
     TLPLevelEnum
 )
+from drf_spectacular.utils import extend_schema_field
 
 User = get_user_model()
 
@@ -34,10 +35,12 @@ class FeedModuleListSerializer(serializers.ModelSerializer):
         )
         read_only_fields = fields
     
+    @extend_schema_field(serializers.BooleanField())
     def get_is_global(self, obj):
         """Check if feed is global (not linked to any company)."""
         return obj.company is None
     
+    @extend_schema_field(serializers.BooleanField())
     def get_can_execute(self, obj):
         """Check if current user can execute this feed."""
         request = self.context.get('request')
@@ -55,6 +58,7 @@ class FeedModuleListSerializer(serializers.ModelSerializer):
         # For global feeds, only superusers can execute
         return False
     
+    @extend_schema_field(serializers.JSONField(allow_null=True))
     def get_last_execution_status(self, obj):
         """Get status of the last execution."""
         last_execution = FeedExecutionRecord.objects.filter(
@@ -97,10 +101,12 @@ class FeedModuleSerializer(serializers.ModelSerializer):
             'total_iocs_imported', 'feed_type'
         )
     
+    @extend_schema_field(serializers.BooleanField())
     def get_is_global(self, obj):
         """Check if feed is global (not linked to any company)."""
         return obj.company is None
     
+    @extend_schema_field(serializers.BooleanField())
     def get_can_execute(self, obj):
         """Check if current user can execute this feed."""
         request = self.context.get('request')
@@ -118,6 +124,7 @@ class FeedModuleSerializer(serializers.ModelSerializer):
         # For global feeds, only superusers can execute
         return False
     
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_feed_type(self, obj):
         """Get the specific feed type ID."""
         try:
@@ -181,6 +188,7 @@ class EnrichedIOCSerializer(serializers.ModelSerializer):
     ioc_type_display = serializers.CharField(source='get_ioc_type_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     feed_matches = IOCFeedMatchSerializer(many=True, read_only=True)
+    match_count = serializers.SerializerMethodField()
     
     class Meta:
         model = EnrichedIOC
@@ -191,6 +199,11 @@ class EnrichedIOCSerializer(serializers.ModelSerializer):
             'tags', 'feed_matches', 'match_count', 'es_index', 'es_doc_id'
         )
         read_only_fields = fields
+
+    @extend_schema_field(serializers.IntegerField())
+    def get_match_count(self, obj):
+        """Count of feed matches for this IOC."""
+        return obj.feed_matches.count()
 
 class EnrichObservableRequestSerializer(serializers.Serializer):
     """Serializer for observable enrichment requests."""

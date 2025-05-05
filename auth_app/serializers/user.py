@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from companies.models import Company
+from drf_spectacular.utils import extend_schema_field
 
 User = get_user_model()
 
@@ -17,6 +18,7 @@ class UserSerializer(serializers.ModelSerializer):
                   'is_active', 'role', 'company', 'company_name']
         read_only_fields = ['id', 'is_active', 'company_name']
     
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_company_name(self, obj):
         """Get company name for the user"""
         if obj.company:

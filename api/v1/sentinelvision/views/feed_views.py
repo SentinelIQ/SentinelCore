@@ -154,10 +154,50 @@ class FeedModuleViewSet(viewsets.ModelViewSet):
         tags=['Threat Intelligence (SentinelVision)'],
         description='List execution history for a feed module.',
         responses={
-            200: FeedExecutionRecordSerializer(many=True),
-            404: StandardResponse(status_type='error', message='Feed not found'),
-            403: StandardResponse(status_type='error', message='Permission denied')
-        }
+            200: OpenApiResponse(
+                description="Feed execution history retrieved successfully",
+                response=FeedExecutionRecordSerializer(many=True)
+            ),
+            404: OpenApiResponse(
+                description="Feed not found",
+                examples=[
+                    OpenApiExample(
+                        name="feed_not_found",
+                        summary="Feed not found error",
+                        description="Example of response when the specified feed doesn't exist",
+                        value={
+                            "status": "error",
+                            "message": "Feed not found",
+                            "data": None
+                        }
+                    )
+                ]
+            ),
+            403: OpenApiResponse(
+                description="Permission denied",
+                examples=[
+                    OpenApiExample(
+                        name="permission_denied",
+                        summary="Permission denied error",
+                        description="Example of response when user lacks permission to view feed history",
+                        value={
+                            "status": "error",
+                            "message": "You do not have permission to view this feed's history",
+                            "data": None
+                        }
+                    )
+                ]
+            )
+        },
+        parameters=[
+            OpenApiParameter(
+                name='id',
+                description='The ID of the feed module',
+                required=True,
+                type=str,
+                location=OpenApiParameter.PATH
+            )
+        ]
     )
     @action(detail=True, methods=['get'], url_path='history')
     def execution_history(self, request, pk=None):

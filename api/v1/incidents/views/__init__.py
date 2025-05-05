@@ -115,6 +115,11 @@ class IncidentViewSet(IncidentCreateMixin, IncidentDetailMixin, IncidentCustomAc
         """
         Returns only incidents from the user's company, unless the user is a superuser.
         """
+        # Handle schema generation
+        if getattr(self, 'swagger_fake_view', False):
+            # Return empty queryset for schema generation
+            return Incident.objects.none()
+            
         user = self.request.user
         
         if user.is_superuser:

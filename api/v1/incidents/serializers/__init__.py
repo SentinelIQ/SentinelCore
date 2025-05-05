@@ -4,7 +4,7 @@ from .incident import (
     IncidentCreateSerializer,
     IncidentUpdateSerializer,
     AlertLightSerializer,
-    UserLightSerializer
+    IncidentUserLightSerializer
 )
 from .incident_actions import (
     IncidentTimelineEntrySerializer,
@@ -13,7 +13,7 @@ from .incident_actions import (
 from .incident_observable import (
     IncidentObservableSerializer,
     IncidentObservableCreateSerializer,
-    ObservableLightSerializer
+    IncidentObservableLightSerializer
 )
 from .incident_task import (
     IncidentTaskSerializer,
@@ -35,10 +35,11 @@ __all__ = [
     'TimelineEventSerializer',
     'IncidentObservableSerializer',
     'IncidentObservableCreateSerializer',
-    'ObservableLightSerializer',
+    'IncidentObservableLightSerializer',
     'IncidentTaskSerializer',
     'IncidentTaskCreateSerializer',
     'IncidentTaskUpdateSerializer',
     'IncidentReportSerializer',
     'IncidentReportFormatSerializer',
+    'IncidentUserLightSerializer',
 ] 

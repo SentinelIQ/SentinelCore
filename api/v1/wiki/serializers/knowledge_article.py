@@ -1,6 +1,7 @@
 from rest_framework import serializers
 from wiki.models import KnowledgeArticle
 import markdown2
+from drf_spectacular.utils import extend_schema_field
 
 
 class KnowledgeArticleSerializer(serializers.ModelSerializer):
@@ -23,6 +24,7 @@ class KnowledgeArticleSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'html_content', 'author_name', 'category_name',
                           'created_at', 'updated_at', 'version', 'author']
     
+    @extend_schema_field(serializers.CharField())
     def get_html_content(self, obj):
         """
         Convert Markdown content to HTML.
@@ -34,6 +36,7 @@ class KnowledgeArticleSerializer(serializers.ModelSerializer):
             )
         return ""
     
+    @extend_schema_field(serializers.CharField())
     def get_author_name(self, obj):
         """
         Get the author's display name.
@@ -42,6 +45,7 @@ class KnowledgeArticleSerializer(serializers.ModelSerializer):
             return f"{obj.author.first_name} {obj.author.last_name}" if obj.author.first_name else obj.author.username
         return "Unknown"
     
+    @extend_schema_field(serializers.CharField(allow_null=True))
     def get_category_name(self, obj):
         """
         Get the category name.
