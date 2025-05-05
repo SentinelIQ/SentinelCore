@@ -21,12 +21,14 @@ os.environ['PYTHONIOENCODING'] = 'utf-8'
 os.environ['LC_ALL'] = 'C.UTF-8'
 os.environ['LANG'] = 'C.UTF-8'
 
-# Load task modules from all registered Django app configs
-# This will find all tasks.py files in each app
-app.autodiscover_tasks()
+# Deprecated: We now use explicit task registry with centralized organization
+# app.autodiscover_tasks()
 
 # Import Celery signals for Sentry monitoring
 import sentineliq.celery_signals
+
+# Updated: Import task registry for centralized task management
+from sentineliq.tasks import register_all_tasks, autodiscover_task_modules
 
 # Define the schedule for periodic tasks
 app.conf.beat_schedule = {
@@ -45,6 +47,15 @@ app.conf.beat_schedule = {
     'reprocess-tenant-iocs': {
         'task': 'sentinelvision.tasks.reprocess_tenant_iocs',
         'schedule': crontab(minute='*/30'),  # Every 30 minutes
+    },
+    # Updated: New enterprise monitoring tasks
+    'system-health-check': {
+        'task': 'sentineliq.tasks.system.health_check',
+        'schedule': crontab(minute='*/15'),  # Every 15 minutes
+    },
+    'cleanup-old-logs': {
+        'task': 'sentineliq.tasks.system.cleanup_old_logs',
+        'schedule': crontab(minute='0', hour='4'),  # Daily at 4 AM
     },
 }
 
@@ -93,23 +104,19 @@ def verify_task_modules(sender, **kwargs):
     logger = logging.getLogger('celery.worker')
     logger.info("Verifying task modules are properly loaded...")
     
-    # Task modules that must be explicitly imported
-    critical_task_modules = [
-        'api.core.tasks',
-        'mitre.tasks',
-        'sentinelvision.tasks',  # Import the main tasks module
-        'sentinelvision.tasks.feed_tasks',
-        'sentinelvision.tasks.feed_dispatcher',  # Explicitly import the feed dispatcher
-        'sentinelvision.tasks.enrichment_tasks',
-        'notifications.tasks'
-    ]
+    # Updated: Use centralized task registry
+    task_registration_results = register_all_tasks()
     
-    for module_path in critical_task_modules:
-        try:
-            importlib.import_module(module_path)
-            logger.info(f"Successfully imported task module: {module_path}")
-        except ImportError as e:
-            logger.error(f"Failed to import task module {module_path}: {str(e)}")
+    # Log successful imports
+    for module_path in task_registration_results['success']:
+        logger.info(f"Successfully imported task module: {module_path}")
+    
+    # Log failed imports
+    for failed in task_registration_results['failed']:
+        logger.error(f"Failed to import task module {failed['module']}: {failed['error']}")
+    
+    # Auto-discover any remaining task modules
+    discovered_modules = autodiscover_task_modules()
     
     # Ensure all dynamic feed modules are imported and registered
     try:
@@ -164,7 +171,7 @@ def on_worker_ready(sender, **kwargs):
             # Run migrations first
             logger.info("Triggering database migration task")
             result = app.send_task(
-                'api.core.tasks.run_migrations',
+                'sentineliq.tasks.system.run_migrations',  # Updated: Use new task path
                 queue='sentineliq_soar_setup'  # Ensure task goes to the setup queue
             )
             logger.info(f"Database migration task scheduled with ID: {result.id}")
@@ -176,6 +183,15 @@ def on_worker_ready(sender, **kwargs):
                 queue='sentineliq_soar_setup'
             )
             logger.info(f"MITRE data sync task scheduled with ID: {result.id}")
+            
+            # Initialize periodic tasks
+            logger.info("Setting up periodic tasks")
+            result = app.send_task(
+                'sentineliq.tasks.scheduled.schedule_periodic_tasks',  # Updated: Use new task
+                kwargs={'enable_all': True},
+                queue='sentineliq_soar_setup'
+            )
+            logger.info(f"Periodic tasks setup scheduled with ID: {result.id}")
             
         except Exception as e:
             logger.error(f"Failed to schedule setup tasks: {str(e)}")
@@ -237,95 +253,53 @@ def on_worker_ready(sender, **kwargs):
         # For notification worker, initialize notification systems
         try:
             logger.info("Initializing notification systems")
-            # You can add notification-specific initialization tasks here
+            # Trigger daily report generation on startup
+            result = app.send_task(
+                'sentineliq.tasks.scheduled.daily_report_generator',  # Updated: Use new task
+                kwargs={'days': 1, 'report_format': 'pdf'},
+                queue='sentineliq_soar_notification'
+            )
+            logger.info(f"Initial report generation triggered with ID: {result.id}")
+            
         except Exception as e:
             logger.error(f"Failed to initialize notification systems: {str(e)}")
     
-    # For all workers, search for tasks in the beat schedule that belong to their queue
+    # For all workers, run a system health check
     try:
-        beat_schedule = getattr(settings, 'CELERY_BEAT_SCHEDULE', {})
-        worker_queue_map = {
-            'soar_setup': 'sentineliq_soar_setup',
-            'soar_vision_feed': 'sentineliq_soar_vision_feed',
-            'soar_vision_enrichment': 'sentineliq_soar_vision_enrichment',
-            'soar_vision_analyzer': 'sentineliq_soar_vision_analyzer',
-            'soar_vision_responder': 'sentineliq_soar_vision_responder',
-            'soar_notification': 'sentineliq_soar_notification',
-            'worker1': 'celery'
-        }
-        
-        # Get the queue for this worker
-        current_queue = worker_queue_map.get(worker_name)
-        if not current_queue:
-            logger.info(f"No queue mapping for worker: {worker_name}")
-            return
-            
-        # Find and run tasks for this worker's queue
-        for task_name, task_config in beat_schedule.items():
-            options = task_config.get('options', {})
-            task_queue = options.get('queue')
-            
-            # Only run tasks for this worker's queue
-            if task_queue == current_queue:
-                task_path = task_config.get('task')
-                kwargs = task_config.get('kwargs', {})
-                
-                logger.info(f"Triggering scheduled task: {task_path} for queue: {task_queue}")
-                
-                try:
-                    result = app.send_task(task_path, kwargs=kwargs, **options)
-                    logger.info(f"Successfully triggered task: {task_path}")
-                except Exception as e:
-                    logger.error(f"Failed to trigger task {task_path}: {str(e)}")
+        # Run system health check
+        result = app.send_task(
+            'sentineliq.tasks.system.health_check',
+            queue='sentineliq_soar_setup'
+        )
+        logger.info(f"Initial system health check triggered with ID: {result.id}")
     except Exception as e:
-        logger.error(f"Error processing beat schedule for worker {worker_name}: {str(e)}")
+        logger.error(f"Failed to run system health check: {str(e)}")
 
 
 @beat_init.connect
 def on_beat_init(sender, **kwargs):
     """
-    Signal handler that triggers when Celery Beat initializes.
+    Signal handler that runs when Celery Beat scheduler starts.
     
-    Useful for verifying that the scheduler is working correctly,
-    and for setting up any dynamic schedules.
+    Sets up all required periodic tasks in the database.
     """
     logger = logging.getLogger('celery.beat')
-    logger.info("Celery Beat initialized - Scheduler is active")
+    logger.info("Celery Beat scheduler starting")
     
-    # Log all registered periodic tasks
-    beat_schedule = getattr(settings, 'CELERY_BEAT_SCHEDULE', {})
-    logger.info(f"Registered {len(beat_schedule)} periodic tasks")
-    
-    for task_name, task_config in beat_schedule.items():
-        task_path = task_config.get('task')
-        schedule = task_config.get('schedule')
-        logger.info(f"Scheduled task: {task_name} -> {task_path} ({schedule})")
+    try:
+        # Import and use the periodic task scheduler
+        from sentineliq.tasks.scheduled import schedule_periodic_tasks
+        
+        # Set up all periodic tasks
+        logger.info("Ensuring all periodic tasks are properly scheduled")
+        
+        # This is a local function call, not a task execution
+        # The actual task execution will happen through the worker
+        schedule_periodic_tasks(enable_all=True)
+        
+    except Exception as e:
+        logger.error(f"Error setting up periodic tasks: {str(e)}")
+        logger.exception(e)
 
-
-# Example of how to set up dynamic periodic tasks when Celery is configured
-# @app.on_after_configure.connect
-# def setup_periodic_tasks(sender, **kwargs):
-#     """
-#     Configure additional Celery Beat periodic tasks programmatically.
-#     
-#     This runs after Celery has been fully configured. You can use this to
-#     dynamically create periodic tasks that aren't defined in settings.
-#     """
-#     # Add periodic tasks
-#     sender.add_periodic_task(
-#         crontab(minute='*/10'),
-#         app.task(name='sentineliq.tasks.check_cases_for_escalation'),
-#         name='check-cases-for-escalation',
-#     )
-#     
-#     sender.add_periodic_task(
-#         crontab(minute='30', hour='*/1'),
-#         app.task(name='sentineliq.tasks.check_for_expired_cases'),
-#         name='check-for-expired-cases',
-#     )
-#     
-#     sender.add_periodic_task(
-#         crontab(minute='*/15'),
-#         app.task(name='sentinelvision.tasks.schedule_feeds'),
-#         name='schedule-feed-modules',
-#     ) 
+# Export the Celery app
+__all__ = ('app',) 

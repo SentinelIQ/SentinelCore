@@ -396,4 +396,75 @@ To add new documentation:
 2. Update the navigation structure in `mkdocs.yml` if needed
 3. The documentation server will automatically refresh with your changes
 
-For more information on MkDocs, see the [MkDocs documentation](https://www.mkdocs.org/). 
+For more information on MkDocs, see the [MkDocs documentation](https://www.mkdocs.org/).
+
+## 🚀 Celery Task Architecture
+
+### Overview
+
+SentinelIQ implements a robust, distributed task processing system using Celery, organized into specialized workers and queues for different types of workloads:
+
+```
+sentineliq/
+├── celery.py                 # Main Celery app configuration
+├── celery_signals.py         # Signal handlers for monitoring 
+└── tasks/                    # Core application tasks
+    ├── __init__.py           # Task registry and imports
+    ├── alerts/               # Alert-specific tasks
+    ├── incidents/            # Incident management tasks  
+    ├── observables/          # Observable processing tasks
+    ├── reporting/            # Report generation tasks
+    ├── scheduled/            # Periodic scheduled tasks
+    └── system/               # System maintenance tasks
+```
+
+### Worker Types & Queues
+
+| Worker | Queue | Purpose |
+|--------|-------|---------|
+| `soar_setup` | `sentineliq_soar_setup` | System initialization, migrations, data sync |
+| `soar_vision_feed` | `sentineliq_soar_vision_feed` | Threat intelligence feed processing |
+| `soar_vision_enrichment` | `sentineliq_soar_vision_enrichment` | Observable enrichment with context |
+| `soar_vision_analyzer` | `sentineliq_soar_vision_analyzer` | AI-powered analysis tasks |
+| `soar_vision_responder` | `sentineliq_soar_vision_responder` | Automated response actions |
+| `soar_notification` | `sentineliq_soar_notification` | System and user notifications |
+
+### Task Naming Convention
+
+Tasks follow a standardized naming pattern for consistency and clarity:
+
+```python
+@shared_task(
+    name="module.submodule.descriptive_task_name",
+    # Other task configuration...
+)
+def descriptive_task_name(args):
+    # Task implementation
+```
+
+### Task Implementation Standards
+
+1. **Task Definition**:
+   - Tasks use the `@shared_task` decorator with explicit naming
+   - Each task has appropriate retry policies and queue assignment
+   - Task functions include comprehensive docstrings
+
+2. **Task Organization**:
+   - Related tasks are grouped in domain-specific modules
+   - Tasks with similar purposes share common base configurations
+   - All tasks use centralized error handling and auditing
+
+3. **Auditing & Monitoring**:
+   - All tasks log execution to centralized audit logs
+   - Tasks use the `audit_task` decorator for security tracking
+   - Resource usage is monitored through Flower dashboard
+
+### Security & Reliability
+
+- Queue isolation prevents task type interference
+- Task timeouts prevent worker deadlocks
+- Rate limiting prevents system overload
+- Retry mechanisms with exponential backoff improve resilience
+- All tasks integrate with central audit logging
+
+For detailed implementation, see `api/core/tasks.py` for base classes and decorators. 
