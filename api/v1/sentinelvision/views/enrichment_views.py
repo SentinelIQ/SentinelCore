@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db.models import Q
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample, OpenApiResponse
 
 from api.core.responses import (
     success_response, error_response, StandardResponse
@@ -28,12 +28,72 @@ class EnrichmentViewSet(viewsets.ViewSet):
     
     @extend_schema(
         tags=['Threat Intelligence (SentinelVision)'],
-        description='Enrich an observable (IOC) by checking it against all relevant feeds.',
+        summary="Enrich observable with threat intelligence",
+        description=(
+            "Initiates the enrichment process for a security observable (Indicator of Compromise) by checking it "
+            "against all configured threat intelligence sources. This endpoint is a cornerstone of the SOAR platform's "
+            "automated intelligence gathering capabilities, allowing analysts to quickly determine if an observable "
+            "has been reported in threat intelligence feeds. The process runs asynchronously and checks the observable "
+            "against various intelligence sources including MISP instances, TAXII feeds, commercial threat intelligence "
+            "platforms, and open-source intelligence. Results include reputation scores, first/last seen dates, related "
+            "malware families, and associated threat actors. This capability is essential for rapid triage and threat "
+            "assessment during security incident response."
+        ),
         request=EnrichObservableRequestSerializer,
         responses={
-            200: StandardResponse(status_type='success'),
-            400: StandardResponse(status_type='error', message='Invalid request'),
-            403: StandardResponse(status_type='error', message='Permission denied')
+            200: OpenApiResponse(
+                description="Enrichment process started successfully",
+                examples=[
+                    OpenApiExample(
+                        name="enrichment_response",
+                        summary="Enrichment task initiated",
+                        description="Example of a successful enrichment request response",
+                        value={
+                            "status": "success",
+                            "message": "Enrichment task for IP 1.2.3.4 started",
+                            "data": {
+                                "task_id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+                                "ioc_type": "ip",
+                                "ioc_value": "1.2.3.4",
+                                "status": "pending"
+                            }
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description="Invalid request parameters",
+                examples=[
+                    OpenApiExample(
+                        name="invalid_request",
+                        summary="Invalid enrichment request",
+                        description="Example of response when the request contains invalid parameters",
+                        value={
+                            "status": "error",
+                            "message": "Invalid request parameters",
+                            "errors": {
+                                "ioc_type": ["This field is required."],
+                                "ioc_value": ["Invalid IP address format."]
+                            }
+                        }
+                    )
+                ]
+            ),
+            403: OpenApiResponse(
+                description="Permission denied",
+                examples=[
+                    OpenApiExample(
+                        name="permission_denied",
+                        summary="Permission denied error",
+                        description="Example of response when user lacks permission to use enrichment features",
+                        value={
+                            "status": "error",
+                            "message": "You do not have permission to use enrichment features",
+                            "data": None
+                        }
+                    )
+                ]
+            )
         },
         examples=[
             OpenApiExample(
@@ -42,7 +102,8 @@ class EnrichmentViewSet(viewsets.ViewSet):
                 value={
                     'ioc_type': 'ip',
                     'ioc_value': '1.2.3.4',
-                    'description': 'Suspicious IP from alert'
+                    'description': 'Suspicious IP from alert',
+                    'source': 'manual_submission'
                 },
                 request_only=True,
             ),
@@ -52,7 +113,30 @@ class EnrichmentViewSet(viewsets.ViewSet):
                 value={
                     'ioc_type': 'domain',
                     'ioc_value': 'malicious.example.com',
-                    'description': 'Suspicious domain from email'
+                    'description': 'Suspicious domain from email',
+                    'source': 'phishing_alert'
+                },
+                request_only=True,
+            ),
+            OpenApiExample(
+                'Hash Enrichment',
+                summary='Enrich a file hash',
+                value={
+                    'ioc_type': 'hash',
+                    'ioc_value': '44d88612fea8a8f36de82e1278abb02f',
+                    'description': 'Malware sample from sandbox',
+                    'source': 'sandbox_analysis'
+                },
+                request_only=True,
+            ),
+            OpenApiExample(
+                'URL Enrichment',
+                summary='Enrich a URL',
+                value={
+                    'ioc_type': 'url',
+                    'ioc_value': 'https://malicious.example.com/payload.php',
+                    'description': 'Malicious URL from web proxy logs',
+                    'source': 'proxy_alert'
                 },
                 request_only=True,
             )
@@ -219,11 +303,68 @@ class EnrichmentViewSet(viewsets.ViewSet):
     
     @extend_schema(
         tags=['Threat Intelligence (SentinelVision)'],
-        description='Force re-enrichment of a specific observable (IOC).',
+        summary="Re-enrich existing observable",
+        description=(
+            "Forces a fresh enrichment of an existing observable that has already been processed. This endpoint "
+            "is critical for security operations that need to refresh threat intelligence on indicators that may "
+            "have new information available from intelligence sources. As threat landscapes evolve, intelligence "
+            "about observables can change over time - for example, an IP previously marked as benign might later "
+            "be associated with malicious activity. This endpoint enables security analysts to get the most current "
+            "intelligence on observables of interest. The process runs asynchronously and updates all metadata, "
+            "reputation scores, and relationships for the observable based on the latest available threat intelligence."
+        ),
         responses={
-            200: StandardResponse(status_type='success'),
-            404: StandardResponse(status_type='error', message='Observable not found'),
-            403: StandardResponse(status_type='error', message='Permission denied')
+            200: OpenApiResponse(
+                description="Re-enrichment process started successfully",
+                examples=[
+                    OpenApiExample(
+                        name="reenrichment_response",
+                        summary="Re-enrichment task initiated",
+                        description="Example of a successful re-enrichment request response",
+                        value={
+                            "status": "success",
+                            "message": "Re-enrichment task for hash: 44d88612fea8a8f36de82e1278abb02f started",
+                            "data": {
+                                "task_id": "c5d6e7f8-9a0b-1c2d-3e4f-5a6b7c8d9e0f",
+                                "ioc_id": "1a2b3c4d-5e6f-7a8b-9c0d-1e2f3a4b5c6d",
+                                "ioc_type": "hash",
+                                "ioc_value": "44d88612fea8a8f36de82e1278abb02f",
+                                "status": "pending"
+                            }
+                        }
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                description="Observable not found",
+                examples=[
+                    OpenApiExample(
+                        name="observable_not_found",
+                        summary="Observable not found error",
+                        description="Example of response when the specified observable doesn't exist",
+                        value={
+                            "status": "error",
+                            "message": "Observable not found",
+                            "data": None
+                        }
+                    )
+                ]
+            ),
+            403: OpenApiResponse(
+                description="Permission denied",
+                examples=[
+                    OpenApiExample(
+                        name="permission_denied",
+                        summary="Permission denied error",
+                        description="Example of response when user lacks permission to re-enrich observables",
+                        value={
+                            "status": "error",
+                            "message": "You do not have permission to re-enrich observables",
+                            "data": None
+                        }
+                    )
+                ]
+            )
         }
     )
     @action(detail=True, methods=['post'], url_path='reenrich-observable')

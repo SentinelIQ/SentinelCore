@@ -20,23 +20,23 @@ class DashboardSummaryView(APIView):
     @extend_schema(
         tags=['System Monitoring & Operations'],
         operation_id='dashboard_summary',
-        description="""
-        Get a comprehensive dashboard summary including alerts, incidents, and tasks.
-        
-        Includes metrics:
-        - Total alerts (open/closed)
-        - Incidents by status
-        - MTTR (Mean Time to Respond)
-        - Escalation rate
-        - Task completion rate
-        
-        Can be filtered by time range (days parameter).
-        """,
+        summary="Retrieve security operations dashboard summary",
+        description=(
+            "Provides a comprehensive operational overview of the security posture across the SOAR platform, "
+            "essential for security leadership and analyst teams to monitor incident response effectiveness. "
+            "This endpoint delivers consolidated metrics about security alerts, incidents, and response activities "
+            "with multi-tenant isolation ensuring data segregation between different organizations. "
+            "The dashboard data is used to evaluate security team performance, track key metrics such as mean time "
+            "to respond (MTTR), alert-to-incident escalation rates, and task completion efficiency. This endpoint "
+            "supports informed decision-making for SOC managers and provides visibility into security operations "
+            "trends over customizable time periods. The response includes detailed breakdowns by severity levels, "
+            "allowing teams to focus on high-priority threats and operational bottlenecks."
+        ),
         parameters=[
             OpenApiParameter(
                 name='days', 
                 type=int, 
-                description='Number of days to include in metrics', 
+                description='Number of days to include in the metrics calculation window', 
                 default=30,
                 required=False
             ),
@@ -47,7 +47,9 @@ class DashboardSummaryView(APIView):
                 response=dict,
                 examples=[
                     OpenApiExample(
-                        name="Example Response",
+                        name="Comprehensive Summary",
+                        summary="Complete security operations dashboard",
+                        description="Example of a comprehensive dashboard with alert, incident, and task metrics",
                         value={
                             "status": "success",
                             "message": "Dashboard summary generated successfully",
@@ -56,22 +58,66 @@ class DashboardSummaryView(APIView):
                                     "total": 158,
                                     "open": 47,
                                     "closed": 111,
-                                    "by_severity": {"low": 42, "medium": 65, "high": 38, "critical": 13}
+                                    "by_severity": {"low": 42, "medium": 65, "high": 38, "critical": 13},
+                                    "by_source": {
+                                        "siem": 84,
+                                        "edr": 37,
+                                        "firewall": 21,
+                                        "manual": 16
+                                    },
+                                    "trend": {
+                                        "labels": ["Week 1", "Week 2", "Week 3", "Week 4"],
+                                        "data": [42, 36, 45, 35]
+                                    }
                                 },
                                 "incident_metrics": {
                                     "total": 25,
                                     "open": 8,
                                     "closed": 17,
                                     "mttr_hours": 8.4,
-                                    "by_severity": {"low": 6, "medium": 10, "high": 7, "critical": 2}
+                                    "mtta_hours": 2.1,
+                                    "by_severity": {"low": 6, "medium": 10, "high": 7, "critical": 2},
+                                    "by_category": {
+                                        "malware": 9,
+                                        "phishing": 6,
+                                        "data_breach": 3,
+                                        "ransomware": 1,
+                                        "other": 6
+                                    },
+                                    "trend": {
+                                        "labels": ["Week 1", "Week 2", "Week 3", "Week 4"],
+                                        "data": [7, 5, 8, 5]
+                                    }
                                 },
                                 "task_metrics": {
                                     "total": 78,
                                     "completed": 62,
                                     "pending": 16,
-                                    "completion_rate": 79.5
+                                    "overdue": 8,
+                                    "completion_rate": 79.5,
+                                    "avg_completion_time_hours": 6.2,
+                                    "by_priority": {
+                                        "low": {"total": 24, "completed": 22},
+                                        "medium": {"total": 32, "completed": 25},
+                                        "high": {"total": 22, "completed": 15}
+                                    }
                                 },
-                                "period_days": 30
+                                "analyst_metrics": {
+                                    "total_analysts": 12,
+                                    "active_analysts": 8,
+                                    "avg_incidents_per_analyst": 3.1,
+                                    "avg_tasks_per_analyst": 6.5
+                                },
+                                "mitre_coverage": {
+                                    "top_techniques": [
+                                        {"id": "T1566", "name": "Phishing", "count": 18},
+                                        {"id": "T1078", "name": "Valid Accounts", "count": 12},
+                                        {"id": "T1486", "name": "Data Encrypted for Impact", "count": 9}
+                                    ],
+                                    "coverage_percentage": 67.8
+                                },
+                                "period_days": 30,
+                                "last_updated": "2023-05-15T08:30:15Z"
                             }
                         }
                     )
@@ -83,6 +129,8 @@ class DashboardSummaryView(APIView):
                 examples=[
                     OpenApiExample(
                         name="Invalid Filter Parameters",
+                        summary="Invalid days parameter",
+                        description="Example of response when days parameter is invalid",
                         value={
                             "status": "error",
                             "message": "Invalid filter parameters",
@@ -93,12 +141,30 @@ class DashboardSummaryView(APIView):
                     )
                 ]
             ),
+            403: OpenApiResponse(
+                description="Permission denied",
+                response=dict,
+                examples=[
+                    OpenApiExample(
+                        name="Permission Denied",
+                        summary="User lacks dashboard access permission",
+                        description="Example response when user doesn't have dashboard viewing permission",
+                        value={
+                            "status": "error",
+                            "message": "You do not have permission to view the dashboard",
+                            "data": null
+                        }
+                    )
+                ]
+            ),
             500: OpenApiResponse(
                 description="Server error",
                 response=dict,
                 examples=[
                     OpenApiExample(
                         name="Server Error",
+                        summary="Dashboard generation failure",
+                        description="Example of response when dashboard calculation fails",
                         value={
                             "status": "error",
                             "message": "Error generating dashboard summary: Database timeout"

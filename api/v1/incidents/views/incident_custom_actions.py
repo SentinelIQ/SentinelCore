@@ -19,7 +19,7 @@ from ..serializers import (
     IncidentTaskUpdateSerializer, 
     IncidentReportFormatSerializer
 )
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
 
 logger = logging.getLogger('api.incidents')
 
@@ -88,12 +88,121 @@ class IncidentCustomActionsMixin:
     
     @extend_schema(
         summary="Add timeline entry",
-        description="Adds a new entry to the incident timeline.",
+        description=(
+            "Adds a new entry to the incident timeline. Timeline entries are crucial for "
+            "maintaining a comprehensive record of incident investigation activities. "
+            "Each entry includes a title, optional content, event type, and timestamp. "
+            "Entries are automatically associated with the current user and provide "
+            "a chronological audit trail of actions taken during incident response."
+        ),
         request=IncidentTimelineEntrySerializer,
+        examples=[
+            OpenApiExample(
+                name="note_entry",
+                summary="Standard note entry",
+                description="Basic timeline note with title and content",
+                value={
+                    "title": "Initial investigation findings",
+                    "content": "Reviewed logs and found suspicious activity from IP 192.168.1.100",
+                    "event_type": "note"
+                }
+            ),
+            OpenApiExample(
+                name="action_entry",
+                summary="Action taken entry",
+                description="Timeline entry documenting an action taken by the analyst",
+                value={
+                    "title": "Blocked malicious IP",
+                    "content": "Added 45.67.89.123 to firewall block list",
+                    "event_type": "action"
+                }
+            ),
+            OpenApiExample(
+                name="evidence_entry",
+                summary="Evidence collection entry",
+                description="Timeline entry documenting evidence collected",
+                value={
+                    "title": "Collected memory dump",
+                    "content": "Obtained memory dump from affected server for analysis",
+                    "event_type": "evidence"
+                }
+            )
+        ],
         responses={
-            200: OpenApiResponse(description="Timeline entry added successfully"),
-            400: OpenApiResponse(description="Invalid timeline entry data"),
-            403: OpenApiResponse(description="Permission denied")
+            200: OpenApiResponse(
+                description="Timeline entry added successfully",
+                examples=[
+                    OpenApiExample(
+                        name="success_response",
+                        summary="Entry added successfully",
+                        description="Timeline entry was successfully added to the incident",
+                        value={
+                            "status": "success",
+                            "message": "Timeline entry added successfully",
+                            "data": {
+                                "incident_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                                "timeline_entry": {
+                                    "id": "7fa85f64-5717-4562-b3fc-2c963f66abc7",
+                                    "title": "Initial investigation findings",
+                                    "content": "Reviewed logs and found suspicious activity from IP 192.168.1.100",
+                                    "type": "note",
+                                    "timestamp": "2023-05-18T14:35:42.123456Z",
+                                    "created_by": "5fa85f64-5717-4562-b3fc-2c963f66def9"
+                                }
+                            }
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description="Invalid timeline entry data",
+                examples=[
+                    OpenApiExample(
+                        name="validation_error",
+                        summary="Invalid data format",
+                        description="The request contained invalid data for a timeline entry",
+                        value={
+                            "status": "error",
+                            "message": "Invalid timeline entry data",
+                            "errors": {
+                                "title": ["This field is required."],
+                                "event_type": ["Event type must be one of: note, update, action, evidence, communication"]
+                            },
+                            "code": 400
+                        }
+                    )
+                ]
+            ),
+            403: OpenApiResponse(
+                description="Permission denied",
+                examples=[
+                    OpenApiExample(
+                        name="permission_denied",
+                        summary="User lacks permission",
+                        description="The user doesn't have permission to add timeline entries",
+                        value={
+                            "status": "error",
+                            "message": "You do not have permission to perform this action.",
+                            "code": 403
+                        }
+                    )
+                ]
+            ),
+            500: OpenApiResponse(
+                description="Server error",
+                examples=[
+                    OpenApiExample(
+                        name="server_error",
+                        summary="Internal server error",
+                        description="An error occurred while adding the timeline entry",
+                        value={
+                            "status": "error", 
+                            "message": "Error adding timeline entry: Database error",
+                            "code": 500
+                        }
+                    )
+                ]
+            )
         }
     )
     @action(detail=True, methods=['post'], url_path='add-timeline-entry', permission_classes=[HasEntityPermission])
@@ -473,12 +582,118 @@ class IncidentCustomActionsMixin:
         )
     
     @extend_schema(
-        summary="Add task",
-        description="Adds a new task to this incident.",
+        summary="Add task to incident",
+        description=(
+            "Creates a new task associated with this incident. Tasks are crucial elements of security "
+            "incident response that allow teams to track and delegate specific actions required during "
+            "an investigation. Each task includes a title, description, status, priority, due date, and "
+            "can be assigned to specific analysts. Tasks also appear in the incident timeline for comprehensive "
+            "tracking of all incident activities."
+        ),
         request=IncidentTaskCreateSerializer,
+        examples=[
+            OpenApiExample(
+                name="simple_task",
+                summary="Basic incident task",
+                description="A simple task with minimal required fields",
+                value={
+                    "title": "Block malicious IP at firewall",
+                    "description": "Add IP 185.23.45.67 to firewall blocklist"
+                },
+                request_only=True
+            ),
+            OpenApiExample(
+                name="complete_task",
+                summary="Comprehensive incident task",
+                description="A complete task with all available fields",
+                value={
+                    "title": "Collect and analyze memory dump",
+                    "description": "Acquire memory dump from affected server and analyze for indicators of compromise",
+                    "status": "in_progress",
+                    "priority": "high",
+                    "due_date": "2023-07-18T16:00:00Z",
+                    "assignee": "5fa85f64-5717-4562-b3fc-2c963f66def9"
+                },
+                request_only=True
+            )
+        ],
         responses={
-            201: IncidentTaskSerializer,
-            400: OpenApiResponse(description="Invalid task data")
+            201: OpenApiResponse(
+                description="Task successfully created",
+                examples=[
+                    OpenApiExample(
+                        name="task_created",
+                        summary="Task created successfully",
+                        description="Response when a task is created",
+                        value={
+                            "status": "success",
+                            "message": "Task added to incident",
+                            "data": {
+                                "id": "7fa85f64-5717-4562-b3fc-2c963f66abc7",
+                                "title": "Block malicious IP at firewall",
+                                "description": "Add IP 185.23.45.67 to firewall blocklist",
+                                "status": "open",
+                                "priority": "medium",
+                                "created_at": "2023-07-15T14:32:45.123456Z",
+                                "updated_at": "2023-07-15T14:32:45.123456Z",
+                                "created_by": "5fa85f64-5717-4562-b3fc-2c963f66def9",
+                                "assignee": None,
+                                "due_date": None,
+                                "incident": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                            }
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description="Invalid task data",
+                examples=[
+                    OpenApiExample(
+                        name="validation_error",
+                        summary="Invalid task data",
+                        description="The task data provided failed validation",
+                        value={
+                            "status": "error",
+                            "message": "Invalid task data",
+                            "data": {
+                                "title": ["This field is required."],
+                                "priority": ["Value must be one of: low, medium, high, critical."]
+                            },
+                            "code": 400
+                        }
+                    )
+                ]
+            ),
+            403: OpenApiResponse(
+                description="Permission denied",
+                examples=[
+                    OpenApiExample(
+                        name="permission_denied",
+                        summary="Permission error",
+                        description="User doesn't have permission to add tasks",
+                        value={
+                            "status": "error",
+                            "message": "You do not have permission to perform this action.",
+                            "code": 403
+                        }
+                    )
+                ]
+            ),
+            500: OpenApiResponse(
+                description="Server error",
+                examples=[
+                    OpenApiExample(
+                        name="server_error",
+                        summary="Internal server error",
+                        description="Error occurred while adding the task",
+                        value={
+                            "status": "error",
+                            "message": "Error adding task: Database error",
+                            "code": 500
+                        }
+                    )
+                ]
+            )
         }
     )
     @action(detail=True, methods=['post'], url_path='add-task')
@@ -693,12 +908,129 @@ class IncidentCustomActionsMixin:
     
     @extend_schema(
         summary="Generate incident report",
-        description="Generates a report for this incident in the specified format.",
+        description=(
+            "Generates a comprehensive report for this incident in the specified format. Security incident "
+            "reports are essential for documentation, compliance, and post-incident analysis. Reports include "
+            "incident details, timeline, observables, tasks, and investigation findings. Reports can be generated "
+            "in different formats (PDF or Markdown) and automatically record the generation in the incident timeline. "
+            "This functionality supports regulatory compliance requirements and enables sharing of incident "
+            "information with stakeholders."
+        ),
         request=IncidentReportFormatSerializer,
+        examples=[
+            OpenApiExample(
+                name="pdf_report",
+                summary="PDF report request",
+                description="Generate a report in PDF format",
+                value={
+                    "format": "pdf",
+                    "include_observables": True,
+                    "include_tasks": True
+                },
+                request_only=True
+            ),
+            OpenApiExample(
+                name="markdown_report",
+                summary="Markdown report request",
+                description="Generate a report in Markdown format",
+                value={
+                    "format": "markdown",
+                    "include_observables": True,
+                    "include_tasks": True,
+                    "include_timeline": True
+                },
+                request_only=True
+            )
+        ],
         responses={
-            200: OpenApiResponse(description="Report generated successfully"),
-            400: OpenApiResponse(description="Invalid report options"),
-            500: OpenApiResponse(description="Error generating report")
+            200: OpenApiResponse(
+                description="Report generated successfully",
+                examples=[
+                    OpenApiExample(
+                        name="pdf_response",
+                        summary="PDF report response",
+                        description="Response containing PDF report data",
+                        value={
+                            "status": "success",
+                            "message": "Report generated successfully in pdf format",
+                            "data": {
+                                "report_id": "7fa85f64-5717-4562-b3fc-2c963f66abc7",
+                                "filename": "incident-3fa85f64-5717-4562-b3fc-2c963f66afa6-report.pdf",
+                                "format": "pdf",
+                                "created_at": "2023-07-15T14:45:22.123456Z",
+                                "download_url": "/api/v1/incidents/3fa85f64-5717-4562-b3fc-2c963f66afa6/download-report/7fa85f64-5717-4562-b3fc-2c963f66abc7/",
+                                "file_size": 145678
+                            }
+                        }
+                    ),
+                    OpenApiExample(
+                        name="markdown_response",
+                        summary="Markdown report response",
+                        description="Response containing Markdown report data",
+                        value={
+                            "status": "success",
+                            "message": "Report generated successfully in markdown format",
+                            "data": {
+                                "report_id": "8fa85f64-5717-4562-b3fc-2c963f66abc8",
+                                "filename": "incident-3fa85f64-5717-4562-b3fc-2c963f66afa6-report.md",
+                                "format": "markdown",
+                                "created_at": "2023-07-15T14:46:32.123456Z",
+                                "download_url": "/api/v1/incidents/3fa85f64-5717-4562-b3fc-2c963f66afa6/download-report/8fa85f64-5717-4562-b3fc-2c963f66abc8/",
+                                "file_size": 8765,
+                                "content": "# Incident Report: Suspicious Login Activity\n\n## Summary\nMultiple failed login attempts detected..."
+                            }
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description="Invalid report options",
+                examples=[
+                    OpenApiExample(
+                        name="invalid_format",
+                        summary="Invalid format specified",
+                        description="The report format specified is not supported",
+                        value={
+                            "status": "error",
+                            "message": "Invalid report options",
+                            "data": {
+                                "format": ["Value must be one of: pdf, markdown."]
+                            },
+                            "code": 400
+                        }
+                    )
+                ]
+            ),
+            403: OpenApiResponse(
+                description="Permission denied",
+                examples=[
+                    OpenApiExample(
+                        name="permission_denied",
+                        summary="Permission error",
+                        description="User doesn't have permission to generate reports",
+                        value={
+                            "status": "error",
+                            "message": "You do not have permission to perform this action.",
+                            "code": 403
+                        }
+                    )
+                ]
+            ),
+            500: OpenApiResponse(
+                description="Error generating report",
+                examples=[
+                    OpenApiExample(
+                        name="generation_error",
+                        summary="Report generation error",
+                        description="Error occurred during report generation",
+                        value={
+                            "status": "error",
+                            "message": "Error generating report: PDF generation failed - missing required fonts",
+                            "code": 500
+                        }
+                    )
+                ]
+            )
         }
     )
     @action(detail=True, methods=['post'], url_path='generate-report')

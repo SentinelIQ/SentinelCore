@@ -1,4 +1,7 @@
 from django.apps import AppConfig
+import logging
+
+logger = logging.getLogger('api.core')
 
 
 class ApiCoreConfig(AppConfig):
@@ -23,4 +26,7 @@ class ApiCoreConfig(AppConfig):
                     'lookup_expr': 'contains',
                 }
             }
-        } 
+        }
+
+        # Import signals to register them
+        import api.core.signals 

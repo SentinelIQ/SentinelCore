@@ -17,7 +17,7 @@ from ..serializers import (
     ObservableAddToAlertSerializer
 )
 from incidents.models import Incident
-from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
 
 logger = logging.getLogger('api.alerts')
 
@@ -29,11 +29,76 @@ class AlertCustomActionsMixin:
     @extend_schema(
         tags=['Alert Management'],
         summary="Escalate alert to incident",
-        description="Converts an alert to an incident by creating a new incident linked to this alert and changes the alert status to 'escalated'.",
+        description=(
+            "Converts an alert to an incident by creating a new incident linked to this alert "
+            "and changes the alert status to 'escalated'. This is a key action in the security "
+            "operations workflow when an alert requires formal investigation. The newly created "
+            "incident will inherit severity, tags, TLP, and PAP settings from the source alert."
+        ),
         responses={
-            201: OpenApiResponse(description="Alert successfully escalated", response=dict),
-            400: OpenApiResponse(description="Alert already escalated"),
-            403: OpenApiResponse(description="Permission denied")
+            201: OpenApiResponse(
+                description="Alert successfully escalated", 
+                response=dict,
+                examples=[
+                    OpenApiExample(
+                        name="success_response",
+                        summary="Successful escalation",
+                        description="The alert was successfully escalated to an incident",
+                        value={
+                            "status": "success",
+                            "message": "Alert escalated to incident successfully.",
+                            "data": {
+                                "incident_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                            }
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description="Alert already escalated",
+                examples=[
+                    OpenApiExample(
+                        name="already_escalated",
+                        summary="Alert already escalated",
+                        description="This alert has already been escalated to an incident",
+                        value={
+                            "status": "error",
+                            "message": "Alert is already escalated.",
+                            "code": 400
+                        }
+                    )
+                ]
+            ),
+            403: OpenApiResponse(
+                description="Permission denied",
+                examples=[
+                    OpenApiExample(
+                        name="permission_denied",
+                        summary="User lacks permission",
+                        description="The user doesn't have permission to escalate this alert",
+                        value={
+                            "status": "error", 
+                            "message": "You don't have permission to escalate alerts for this company.",
+                            "code": 403
+                        }
+                    )
+                ]
+            ),
+            500: OpenApiResponse(
+                description="Server error",
+                examples=[
+                    OpenApiExample(
+                        name="server_error",
+                        summary="Internal server error",
+                        description="An error occurred while escalating the alert",
+                        value={
+                            "status": "error",
+                            "message": "Error escalating alert: Database integrity error",
+                            "code": 500
+                        }
+                    )
+                ]
+            )
         }
     )
     @action(detail=True, methods=['post'], url_path='escalate')
@@ -115,13 +180,146 @@ class AlertCustomActionsMixin:
     @extend_schema(
         tags=['Alert Management'],
         summary="Ingest alerts from external systems",
-        description="Endpoint for external systems to send alerts to Sentineliq with deduplication.",
+        description=(
+            "Endpoint for external systems to send alerts to SentinelIQ with automatic deduplication. "
+            "This API allows integration with various security tools and threat intelligence platforms. "
+            "Alerts are automatically deduplicated based on source_ref and external_source fields. "
+            "If a matching alert already exists, the API will return a success response with the duplicate flag set to true. "
+            "Observables (IOCs) can be included in the observable_data field and will be processed accordingly."
+        ),
         request=AlertCreateSerializer,
+        examples=[
+            OpenApiExample(
+                name="simple_alert",
+                summary="Simple alert ingestion",
+                description="Basic alert with required fields",
+                value={
+                    "title": "Suspicious Login Attempt",
+                    "description": "Multiple failed login attempts detected from IP 192.168.1.100",
+                    "severity": "medium",
+                    "source": "WAF",
+                    "source_ref": "WAF-ALERT-123456",
+                    "tlp": 2,  # AMBER
+                    "tags": ["authentication", "brute-force"]
+                }
+            ),
+            OpenApiExample(
+                name="complete_alert",
+                summary="Complete alert with observables",
+                description="Alert with observables included",
+                value={
+                    "title": "Malware Detection: Emotet Variant",
+                    "description": "Emotet malware variant detected on workstation",
+                    "severity": "high",
+                    "source": "EDR",
+                    "source_ref": "EDR-ALERT-789012",
+                    "tlp": 2,  # AMBER
+                    "tags": ["malware", "emotet", "workstation"],
+                    "observable_data": {
+                        "ip": ["10.0.0.15", "185.23.45.67"],
+                        "file_hash": ["44d88612fea8a8f36de82e1278abb02f"],
+                        "domain": ["malicious-domain.com"]
+                    }
+                }
+            )
+        ],
         responses={
-            201: OpenApiResponse(description="Alert successfully ingested", response=dict),
-            200: OpenApiResponse(description="Alert already exists (duplicate)", response=dict),
-            400: OpenApiResponse(description="Invalid alert data"),
-            403: OpenApiResponse(description="Permission denied")
+            201: OpenApiResponse(
+                description="Alert successfully ingested", 
+                response=dict,
+                examples=[
+                    OpenApiExample(
+                        name="success_created",
+                        summary="New alert created",
+                        description="Alert was successfully created as it didn't exist before",
+                        value={
+                            "status": "success",
+                            "message": "Alert successfully ingested.",
+                            "data": {
+                                "alert_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                                "duplicate": False
+                            }
+                        }
+                    )
+                ]
+            ),
+            200: OpenApiResponse(
+                description="Alert already exists (duplicate)", 
+                response=dict,
+                examples=[
+                    OpenApiExample(
+                        name="success_duplicate",
+                        summary="Duplicate alert detected",
+                        description="Alert with the same source_ref and external_source already exists",
+                        value={
+                            "status": "success",
+                            "message": "Alert already exists.",
+                            "data": {
+                                "alert_id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                                "duplicate": True
+                            }
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description="Invalid alert data",
+                examples=[
+                    OpenApiExample(
+                        name="missing_fields",
+                        summary="Missing required fields",
+                        description="Request is missing required fields",
+                        value={
+                            "status": "error",
+                            "message": "Missing required fields: title, source_ref",
+                            "code": 400
+                        }
+                    ),
+                    OpenApiExample(
+                        name="invalid_data",
+                        summary="Invalid data format",
+                        description="Request contains invalid data",
+                        value={
+                            "status": "error",
+                            "message": "Invalid alert data.",
+                            "errors": {
+                                "severity": ["Value must be one of: low, medium, high, critical."]
+                            },
+                            "code": 400
+                        }
+                    )
+                ]
+            ),
+            403: OpenApiResponse(
+                description="Permission denied",
+                examples=[
+                    OpenApiExample(
+                        name="company_permission",
+                        summary="Company permission error",
+                        description="User doesn't have permission for the specified company",
+                        value={
+                            "status": "error",
+                            "message": "You don't have permission to ingest alerts for this company.",
+                            "code": 403
+                        }
+                    )
+                ]
+            ),
+            500: OpenApiResponse(
+                description="Server error",
+                examples=[
+                    OpenApiExample(
+                        name="server_error",
+                        summary="Internal server error",
+                        description="An error occurred during alert ingestion",
+                        value={
+                            "status": "error",
+                            "message": "Error ingesting alert: Database error",
+                            "code": 500
+                        }
+                    )
+                ]
+            )
         }
     )
     @action(detail=False, methods=['post'], url_path='ingest', permission_classes=[IsAuthenticated])

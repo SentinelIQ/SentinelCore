@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from django.db.models import Q
-from drf_spectacular.utils import extend_schema, OpenApiParameter
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiResponse, OpenApiExample
 
 from api.core.responses import (
     success_response, error_response, StandardResponse
@@ -51,11 +51,68 @@ class FeedModuleViewSet(viewsets.ModelViewSet):
     
     @extend_schema(
         tags=['Threat Intelligence (SentinelVision)'],
-        description='Run a feed module manually.',
+        summary="Execute threat intelligence feed processing",
+        description=(
+            "Manually triggers the execution of a threat intelligence feed module. This endpoint initiates "
+            "the asynchronous collection and processing of security data from external sources through the "
+            "SentinelVision automation engine. Feed modules are responsible for ingesting threat intelligence "
+            "data such as malicious indicators, threat actor details, and vulnerability information. The execution "
+            "creates a record in the system and tracks the processing status. This capability is essential for "
+            "security operations to update intelligence data on-demand rather than waiting for scheduled runs, "
+            "particularly when responding to emerging threats that require immediate intelligence updates."
+        ),
         responses={
-            200: OpenApiParameter(name='task_id', description='Celery task ID'),
-            404: StandardResponse(status_type='error', message='Feed not found'),
-            403: StandardResponse(status_type='error', message='Permission denied')
+            200: OpenApiResponse(
+                description="Feed execution started successfully",
+                examples=[
+                    OpenApiExample(
+                        name="feed_execution_response",
+                        summary="Feed execution initiated",
+                        description="Example of a successful feed execution request response",
+                        value={
+                            "status": "success",
+                            "message": "Feed 'MISP Community Feed' execution started. Check history for status.",
+                            "data": {
+                                "execution_id": "f2a05b4c-7c1d-4a9e-8e5f-3e9a1b2c3d4e",
+                                "task_id": "8eca7b3d-5f9a-4b2c-a1e3-7d8c9f0a1b2c",
+                                "feed_id": "a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d",
+                                "feed_name": "MISP Community Feed",
+                                "started_at": "2023-05-15T14:30:45.123456Z"
+                            }
+                        }
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                description="Feed not found",
+                examples=[
+                    OpenApiExample(
+                        name="feed_not_found",
+                        summary="Feed not found error",
+                        description="Example of response when the specified feed doesn't exist",
+                        value={
+                            "status": "error",
+                            "message": "Feed not found",
+                            "data": None
+                        }
+                    )
+                ]
+            ),
+            403: OpenApiResponse(
+                description="Permission denied",
+                examples=[
+                    OpenApiExample(
+                        name="permission_denied",
+                        summary="Permission denied error",
+                        description="Example of response when user lacks permission to execute the feed",
+                        value={
+                            "status": "error",
+                            "message": "You do not have permission to execute this feed",
+                            "data": None
+                        }
+                    )
+                ]
+            )
         }
     )
     @action(detail=True, methods=['post'], url_path='run')

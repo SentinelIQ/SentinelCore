@@ -3,7 +3,7 @@ from .observable_create import ObservableCreateViewMixin
 from .observable_custom_actions import ObservableCustomActionsMixin
 from rest_framework import viewsets
 from api.core.viewsets import StandardViewSet
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse, OpenApiExample
 from rest_framework import filters, status
 from django_filters.rest_framework import DjangoFilterBackend
 from observables.models import Observable
@@ -22,15 +22,175 @@ logger = logging.getLogger('api.observables')
 @extend_schema_view(
     list=extend_schema(
         summary="List all observables",
-        description="Get a paginated list of all observables for the current user's company."
+        description="Get a paginated list of all observables for the current user's company.",
+        responses={
+            200: OpenApiResponse(
+                description="Success",
+                examples=[
+                    OpenApiExample(
+                        name="success_response",
+                        summary="Successful observables list",
+                        description="Example paginated list of observables",
+                        value={
+                            "status": "success",
+                            "message": "Data retrieved successfully",
+                            "data": [
+                                {
+                                    "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                                    "type": "ip",
+                                    "value": "192.168.1.100",
+                                    "is_ioc": True,
+                                    "tags": ["lateral-movement", "internal"],
+                                    "created_at": "2023-07-10T15:38:12.456Z",
+                                    "updated_at": "2023-07-15T09:12:45.789Z"
+                                },
+                                {
+                                    "id": "4fa85f64-5717-4562-b3fc-2c963f66afb7",
+                                    "type": "domain",
+                                    "value": "malicious-domain.com",
+                                    "is_ioc": True,
+                                    "tags": ["c2", "malware"],
+                                    "created_at": "2023-07-12T10:24:36.123Z",
+                                    "updated_at": "2023-07-14T08:45:22.567Z"
+                                }
+                            ],
+                            "metadata": {
+                                "pagination": {
+                                    "count": 2,
+                                    "page": 1,
+                                    "pages": 1,
+                                    "page_size": 50,
+                                    "next": None,
+                                    "previous": None
+                                }
+                            }
+                        }
+                    )
+                ]
+            )
+        }
     ),
     retrieve=extend_schema(
         summary="Get observable detail",
-        description="Retrieve detailed information about a specific observable."
+        description="Retrieve detailed information about a specific observable.",
+        responses={
+            200: OpenApiResponse(
+                description="Success",
+                examples=[
+                    OpenApiExample(
+                        name="success_response",
+                        summary="Successful observable detail",
+                        description="Example detailed observable information",
+                        value={
+                            "status": "success",
+                            "message": "Data retrieved successfully",
+                            "data": {
+                                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                                "type": "ip",
+                                "value": "192.168.1.100",
+                                "is_ioc": True,
+                                "description": "Internal IP address involved in lateral movement",
+                                "tags": ["lateral-movement", "internal"],
+                                "tlp": 2,
+                                "pap": 2,
+                                "created_by": {
+                                    "id": "1fa85f64-5717-4562-b3fc-2c963f66aaa1",
+                                    "username": "analyst1"
+                                },
+                                "company": {
+                                    "id": "5fa85f64-5717-4562-b3fc-2c963f66ccc5",
+                                    "name": "Example Company" 
+                                },
+                                "created_at": "2023-07-10T15:38:12.456Z",
+                                "updated_at": "2023-07-15T09:12:45.789Z",
+                                "enrichment_data": {
+                                    "geolocation": {
+                                        "country": "United States",
+                                        "city": "San Francisco",
+                                        "timezone": "America/Los_Angeles"
+                                    },
+                                    "reputation": {
+                                        "source": "VirusTotal",
+                                        "score": 0,
+                                        "malicious": 0,
+                                        "suspicious": 0,
+                                        "harmless": 68
+                                    }
+                                },
+                                "related_alerts_count": 2,
+                                "related_incidents_count": 1
+                            }
+                        }
+                    )
+                ]
+            ),
+            404: OpenApiResponse(
+                description="Observable not found",
+                examples=[
+                    OpenApiExample(
+                        name="not_found",
+                        summary="Observable not found",
+                        description="Example response when the observable doesn't exist",
+                        value={
+                            "status": "error",
+                            "message": "Observable not found",
+                            "code": 404
+                        }
+                    )
+                ]
+            )
+        }
     ),
     create=extend_schema(
         summary="Create a new observable",
-        description="Create a new observable with the provided data. Automatically handles duplicates."
+        description="Create a new observable with the provided data. Automatically handles duplicates.",
+        responses={
+            201: OpenApiResponse(
+                description="Observable created successfully",
+                examples=[
+                    OpenApiExample(
+                        name="success_created",
+                        summary="Successfully created",
+                        description="Example response when the observable is created successfully",
+                        value={
+                            "status": "success",
+                            "message": "Observable created successfully",
+                            "data": {
+                                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                                "type": "ip",
+                                "value": "192.168.1.100",
+                                "is_ioc": False,
+                                "description": "Internal IP address",
+                                "tags": ["internal"],
+                                "tlp": 2,
+                                "pap": 2,
+                                "created_at": "2023-07-10T15:38:12.456Z",
+                                "updated_at": "2023-07-10T15:38:12.456Z"
+                            }
+                        }
+                    )
+                ]
+            ),
+            400: OpenApiResponse(
+                description="Invalid request data",
+                examples=[
+                    OpenApiExample(
+                        name="validation_error",
+                        summary="Validation error",
+                        description="Example response when the request data is invalid",
+                        value={
+                            "status": "error",
+                            "message": "Invalid request data",
+                            "errors": {
+                                "value": ["This field is required."],
+                                "type": ["Invalid observable type. Choose from ip, domain, url, file_hash, email."]
+                            },
+                            "code": 400
+                        }
+                    )
+                ]
+            )
+        }
     ),
     update=extend_schema(
         summary="Update an observable",

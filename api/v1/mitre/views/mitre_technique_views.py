@@ -11,7 +11,7 @@ from api.core.rbac import HasEntityPermission
 from api.core.pagination import StandardResultsSetPagination
 from api.core.responses import success_response
 from api.core.viewsets import ReadOnlyViewSet
-from drf_spectacular.utils import extend_schema, extend_schema_view
+from drf_spectacular.utils import extend_schema, extend_schema_view, OpenApiResponse, OpenApiExample
 
 
 class MitreTechniqueFilter(FilterSet):
@@ -37,22 +37,182 @@ class MitreTechniqueFilter(FilterSet):
 @extend_schema_view(
     list=extend_schema(
         summary="List MITRE ATT&CK Techniques",
-        description="Returns a list of MITRE ATT&CK Techniques.",
+        description=(
+            "Retrieves a comprehensive list of MITRE ATT&CK Techniques with filtering capabilities. "
+            "MITRE ATT&CK is a globally-accessible knowledge base of adversary tactics and techniques "
+            "based on real-world observations. The techniques represent the various methods that adversaries "
+            "use to accomplish tactical goals during an attack. This endpoint supports security operations "
+            "by providing standardized technique definitions that can be mapped to detection rules, "
+            "security controls, and threat intelligence. The list can be filtered by various criteria "
+            "including tactic, platform, and whether it's a subtechnique."
+        ),
+        responses={
+            200: OpenApiResponse(
+                description="Techniques retrieved successfully",
+                examples=[
+                    OpenApiExample(
+                        name="techniques_list",
+                        summary="Techniques list example",
+                        description="Example showing a paginated list of MITRE ATT&CK techniques",
+                        value={
+                            "count": 586,
+                            "next": "https://api.example.com/api/v1/mitre/techniques/?page=2",
+                            "previous": None,
+                            "results": [
+                                {
+                                    "id": "f3221f77-f3f1-458d-98a1-26a9d8d33b8a",
+                                    "external_id": "T1059",
+                                    "name": "Command and Scripting Interpreter",
+                                    "description": "Adversaries may abuse command and script interpreters to execute commands...",
+                                    "is_subtechnique": False,
+                                    "platforms": ["Windows", "macOS", "Linux"],
+                                    "tactics": [
+                                        {
+                                            "id": "a1739d9a-7db9-447a-9e6c-9b35d1f8be20",
+                                            "name": "Execution",
+                                            "external_id": "TA0002"
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    )
+                ]
+            )
+        },
         tags=["MITRE Framework"]
     ),
     retrieve=extend_schema(
         summary="Retrieve MITRE ATT&CK Technique",
-        description="Returns details of a specific MITRE ATT&CK Technique.",
+        description=(
+            "Retrieves detailed information about a specific MITRE ATT&CK Technique, including its full "
+            "description, platforms it affects, associated tactics, mitigations, and related techniques. "
+            "This endpoint provides the comprehensive knowledge needed for threat modeling, security control "
+            "development, and detection strategy creation. The detailed technique information helps security "
+            "teams understand attacker methodologies and implement appropriate countermeasures. For subtechniques, "
+            "the parent technique is also included to show the hierarchical relationship."
+        ),
+        responses={
+            200: OpenApiResponse(
+                description="Technique retrieved successfully",
+                examples=[
+                    OpenApiExample(
+                        name="technique_detail",
+                        summary="Technique detail example",
+                        description="Example showing detailed information for T1566 (Phishing)",
+                        value={
+                            "id": "c5e8d873-cf00-45c7-a9e4-86f9f9a3c321",
+                            "external_id": "T1566",
+                            "name": "Phishing",
+                            "description": "Adversaries may send phishing messages to gain access to victim systems...",
+                            "is_subtechnique": False,
+                            "platforms": ["Windows", "macOS", "Linux", "Office 365", "SaaS"],
+                            "data_sources": ["Network Traffic", "Email Gateway", "User Interface"],
+                            "detection": "Monitor for suspicious email attachments and URLs...",
+                            "tactics": [
+                                {
+                                    "id": "7c637454-d1e9-4763-9aa8-c1050e07ad10",
+                                    "name": "Initial Access",
+                                    "external_id": "TA0001"
+                                }
+                            ],
+                            "mitigations": [
+                                {
+                                    "id": "2f042a9f-e9d2-445b-9ec8-5d8b4739c543",
+                                    "name": "User Training",
+                                    "external_id": "M1017",
+                                    "description": "Train users to identify social engineering techniques..."
+                                }
+                            ],
+                            "created": "2020-01-15T12:30:00Z",
+                            "modified": "2022-03-27T09:45:00Z",
+                            "subtechniques_count": 3
+                        }
+                    )
+                ]
+            )
+        },
         tags=["MITRE Framework"]
     ),
     related_entities=extend_schema(
         summary="Get entities related to this MITRE Technique",
-        description="Returns counts of alerts, incidents, and observables linked to this technique.",
+        description=(
+            "Retrieves counts of security entities (alerts, incidents, and observables) that are linked to "
+            "this MITRE ATT&CK technique. This endpoint is essential for threat hunting and security operations, "
+            "allowing analysts to identify how frequently a specific attack technique appears across their security "
+            "data. The counts help prioritize response to techniques that are more commonly seen in the environment "
+            "and provide insights into the prevalence of specific attack patterns. This information supports "
+            "better allocation of security resources and more targeted defensive measures."
+        ),
+        responses={
+            200: OpenApiResponse(
+                description="Related entity counts retrieved successfully",
+                examples=[
+                    OpenApiExample(
+                        name="technique_relationships",
+                        summary="Related entity counts example",
+                        description="Example showing counts of entities related to T1566 (Phishing)",
+                        value={
+                            "status": "success",
+                            "message": "Data retrieved successfully",
+                            "data": {
+                                "alert_count": 147,
+                                "incident_count": 38,
+                                "observable_count": 215
+                            }
+                        }
+                    )
+                ]
+            )
+        },
         tags=["MITRE Framework"]
     ),
     subtechniques=extend_schema(
         summary="Get subtechniques of this MITRE Technique",
-        description="Returns a list of subtechniques for this parent technique.",
+        description=(
+            "Retrieves all subtechniques associated with a parent MITRE ATT&CK technique. Subtechniques provide "
+            "more granular descriptions of specific adversary behaviors within the context of a parent technique. "
+            "This endpoint is valuable for security analysts who need to understand the various ways a particular "
+            "technique can be implemented by attackers. The hierarchical relationship between techniques and "
+            "subtechniques supports more precise threat modeling, detection rule development, and security control "
+            "implementation. Each subtechnique includes its ATT&CK ID, name, description, and other metadata."
+        ),
+        responses={
+            200: OpenApiResponse(
+                description="Subtechniques retrieved successfully",
+                examples=[
+                    OpenApiExample(
+                        name="subtechniques_list",
+                        summary="Subtechniques example",
+                        description="Example showing subtechniques for T1059 (Command and Scripting Interpreter)",
+                        value={
+                            "status": "success",
+                            "message": "Data retrieved successfully",
+                            "data": [
+                                {
+                                    "id": "3f886859-c6ce-4e46-9b06-8f37a258e7c5",
+                                    "external_id": "T1059.001",
+                                    "name": "PowerShell",
+                                    "description": "Adversaries may abuse PowerShell commands and scripts...",
+                                    "is_subtechnique": True,
+                                    "platforms": ["Windows"],
+                                    "parent_technique": "f3221f77-f3f1-458d-98a1-26a9d8d33b8a"
+                                },
+                                {
+                                    "id": "49efd859-5c72-4d27-af9f-8d91915dd82f",
+                                    "external_id": "T1059.003",
+                                    "name": "Windows Command Shell",
+                                    "description": "Adversaries may abuse the Windows command shell...",
+                                    "is_subtechnique": True,
+                                    "platforms": ["Windows"],
+                                    "parent_technique": "f3221f77-f3f1-458d-98a1-26a9d8d33b8a"
+                                }
+                            ]
+                        }
+                    )
+                ]
+            )
+        },
         tags=["MITRE Framework"]
     )
 )
@@ -81,7 +241,48 @@ class MitreTechniqueView(ReadOnlyViewSet):
     
     @extend_schema(
         summary="Get MITRE Technique statistics",
-        description="Returns statistics about techniques grouped by tactic, type and platform.",
+        description=(
+            "Provides comprehensive statistics about MITRE ATT&CK techniques categorized by tactics, "
+            "technique types, and platforms. This endpoint is critical for threat intelligence analysis "
+            "and security posture assessments. The data returned enables security teams to understand "
+            "the distribution of techniques across different tactics (like Initial Access, Execution, etc.), "
+            "differentiate between base techniques and subtechniques, and identify which platforms (Windows, "
+            "Linux, Cloud, etc.) have more documented attack techniques. This information helps in prioritizing "
+            "security controls and detection capabilities."
+        ),
+        responses={
+            200: OpenApiResponse(
+                description="Statistics retrieved successfully",
+                examples=[
+                    OpenApiExample(
+                        name="technique_statistics",
+                        summary="Technique statistics example",
+                        description="Example showing statistics for MITRE ATT&CK techniques",
+                        value={
+                            "status": "success",
+                            "message": "Data retrieved successfully",
+                            "data": {
+                                "by_tactic": [
+                                    {"tactics__name": "Defense Evasion", "count": 42},
+                                    {"tactics__name": "Execution", "count": 28},
+                                    {"tactics__name": "Persistence", "count": 19}
+                                ],
+                                "by_type": {
+                                    "techniques": 193,
+                                    "subtechniques": 401
+                                },
+                                "by_platform": [
+                                    {"platform": "Windows", "count": 312},
+                                    {"platform": "Linux", "count": 289},
+                                    {"platform": "macOS", "count": 261},
+                                    {"platform": "Cloud", "count": 124}
+                                ]
+                            }
+                        }
+                    )
+                ]
+            )
+        },
         tags=["MITRE Framework"]
     )
     @action(detail=False, methods=['get'])
