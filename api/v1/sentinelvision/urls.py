@@ -1,11 +1,11 @@
 """
 URL patterns for the SentinelVision API.
-# Define app name for namespace
-app_name = 'sentinelvision'
-
 """
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
+
+# Define app name for namespace
+app_name = 'sentinelvision'
 
 from api.v1.sentinelvision.views.feed_views import FeedModuleViewSet
 from api.v1.sentinelvision.views.enrichment_views import EnrichmentViewSet
