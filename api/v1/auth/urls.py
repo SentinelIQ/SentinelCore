@@ -9,6 +9,9 @@ from api.v1.auth.views import (
 )
 from api.v1.audit_logs.views import AuditLogViewSet
 
+# Define app name for URL namespace
+app_name = 'auth'
+
 # Create router for viewsets
 router = DefaultRouter()
 router.register(r'users', UserViewSet, basename='user')

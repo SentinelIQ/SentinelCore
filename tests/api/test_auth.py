@@ -38,9 +38,9 @@ class AuthAPITestCase(APITestCase):
             company=self.company
         )
         
-        # Set up URLs
-        self.token_url = reverse('token_obtain_pair')
-        self.token_refresh_url = reverse('token_refresh')
+        # Set up URLs for v1 API
+        self.token_url = reverse('v1:auth:token_obtain_pair')
+        self.token_refresh_url = reverse('v1:auth:token_refresh')
     
     def test_user_login(self):
         """Test that users can log in and get a JWT token."""
